@@ -1,0 +1,817 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,minimum-scale=1.0,user-scalable=no,viewport-fit=cover">
+<title>KHUMTONE</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{
+  --red:#8B2A2A;
+  --red-light:#f9eded;
+  --blk:#111;
+  --bg:#f2f2f2;
+  --card:#fff;
+  --border:#e8e8e8;
+  --sub:#888;
+  --font:'IBM Plex Sans Thai',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;font-family:var(--font)}
+html{font-size:16px;-webkit-text-size-adjust:100%;text-size-adjust:100%}
+html,body{height:100%;overflow:hidden;background:var(--blk)}
+body{display:flex;flex-direction:column;width:100%;min-height:100vh;position:relative}
+
+/* STATUS BAR */
+.sb{background:var(--blk);padding:12px 18px 6px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sb-time{font-family:var(--mono);font-size:16px;color:rgba(255,255,255,.6);letter-spacing:.5px}
+.sb-brand{font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.25);text-transform:uppercase}
+.sb-bat{font-size:13px;color:rgba(255,255,255,.4)}
+
+/* HEADER */
+.hdr{background:var(--blk);padding:6px 18px 14px;flex-shrink:0}
+.hdr-title{font-size:24px;font-weight:500;color:#fff;letter-spacing:.2px}
+.hdr-sub{font-size:15px;color:rgba(255,255,255,.35);margin-top:4px}
+.hdr-sub .red{color:var(--red)}
+.pgb{background:rgba(255,255,255,.1);border-radius:2px;height:3px;margin-top:10px}
+.pgf{height:100%;border-radius:2px;background:var(--red);transition:width .4s ease}
+
+/* WEEK STRIP */
+.wstrip{display:flex;gap:5px;padding:10px 14px 11px;background:var(--blk);flex-shrink:0}
+.dp{flex:1;text-align:center;padding:7px 2px;border-radius:10px;cursor:pointer;user-select:none;transition:all .15s}
+.dp.sel{background:var(--red)}
+.dp.today{background:rgba(139,42,42,.2);outline:1px solid rgba(139,42,42,.6)}
+.dp .dl{font-size:11px;color:rgba(255,255,255,.35);display:block;letter-spacing:.3px}
+.dp .dn{font-size:18px;font-weight:500;color:rgba(255,255,255,.7);display:block;margin-top:2px}
+.dp.sel .dl,.dp.sel .dn{color:#fff}
+.dp.today .dn{color:rgba(255,255,255,.9)}
+.dp .dd{width:5px;height:5px;border-radius:50%;background:var(--red);margin:4px auto 0}
+.dp.sel .dd{background:rgba(255,255,255,.6)}
+
+/* CONTENT */
+.cnt{flex:1;overflow-y:auto;padding:0 14px 10px;background:var(--bg);scrollbar-width:none}
+.cnt::-webkit-scrollbar{display:none}
+
+.sec{font-size:12px;font-weight:600;color:var(--sub);letter-spacing:1px;text-transform:uppercase;padding:12px 0 6px}
+
+/* TASK CARD */
+.tc{background:var(--card);border-radius:14px;border:.5px solid var(--border);padding:15px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;transition:all .15s;cursor:pointer}
+.tc:active{transform:scale(.98)}
+.tc.high-border{border-color:rgba(139,42,42,.3)}
+.chk{width:26px;height:26px;border-radius:50%;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;transition:all .2s}
+.chk.h{border-color:var(--red)}
+.chk.m{border-color:#777}
+.chk.done{background:var(--red);border-color:var(--red);color:#fff;font-size:14px}
+.tn{font-size:16px;color:var(--blk);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;line-height:1.3}
+.tn.done{text-decoration:line-through;color:#bbb}
+.pb{font-size:11px;padding:3px 8px;border-radius:4px;display:inline-block;margin-top:4px;font-weight:500;letter-spacing:.3px}
+.pb.h{background:var(--red);color:#fff}
+.pb.m{background:#eee;color:#555}
+.pb.l{background:#f5f5f5;color:#aaa;border:.5px solid #e8e8e8}
+.xbtn{padding:7px 13px;border-radius:8px;border:.5px solid #ddd;background:transparent;font-size:13px;color:#777;flex-shrink:0;cursor:pointer;transition:all .15s}
+.xbtn:hover{background:#f5f5f5}
+.rbtn{padding:7px 13px;border-radius:8px;background:var(--red);border:none;font-size:13px;color:#fff;flex-shrink:0;cursor:pointer}
+
+/* EVENT */
+.ev{background:var(--card);border-radius:14px;border:.5px solid var(--border);border-left:3px solid var(--red);padding:12px 16px;margin-bottom:8px}
+.ev-t{font-size:16px;color:var(--blk);font-weight:500}
+.ev-s{font-size:13px;color:var(--sub);margin-top:4px}
+
+/* ROUTINE */
+.rt{background:var(--card);border-radius:14px;border:.5px solid var(--border);padding:15px 16px;margin-bottom:8px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .15s}
+.rt:active{transform:scale(.98)}
+.rt.now-rt{border-color:var(--red)}
+.rc{width:26px;height:26px;border-radius:50%;border:2px solid #ccc;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:14px;transition:all .2s}
+.rc.done{background:var(--red);border-color:var(--red);color:#fff}
+.rn{font-size:16px;color:var(--blk);flex:1}
+.rtm{font-size:13px;color:var(--sub);white-space:nowrap}
+.now-tag{font-size:11px;background:var(--red);color:#fff;padding:3px 8px;border-radius:5px;letter-spacing:.3px}
+
+/* CALENDAR */
+.cg{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-bottom:8px}
+.ch{font-size:11px;text-align:center;color:#bbb;padding:4px 0;font-weight:500}
+.cc{min-height:34px;background:var(--card);border-radius:6px;border:.5px solid #f0f0f0;padding:4px;cursor:pointer;transition:all .15s}
+.cc:active{transform:scale(.95)}
+.cc.td{border-color:var(--red)}
+.cc.emp{background:transparent;border-color:transparent;cursor:default}
+.cc.sel-day{background:var(--red-light);border-color:var(--red)}
+.cdn{font-size:12px;color:#444;font-weight:500}
+.cc.td .cdn{color:var(--red);font-weight:700}
+.cc.sel-day .cdn{color:var(--red)}
+.cdt{width:5px;height:5px;border-radius:50%;background:var(--red);margin-top:2px}
+.cde{width:5px;height:5px;border-radius:50%;background:#999;margin-top:1px}
+.cal-day-title{font-size:13px;font-weight:500;color:var(--blk);padding:6px 0 8px;border-top:.5px solid var(--border);margin-top:3px}
+
+/* SUMMARY CARDS */
+.sg{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.sc{background:var(--card);border-radius:14px;border:.5px solid var(--border);padding:14px 16px}
+.sc.r{background:var(--red);border-color:var(--red)}
+.sc.k{background:var(--blk);border-color:var(--blk)}
+.scl{font-size:13px;color:var(--sub)}
+.sc.r .scl,.sc.k .scl{color:rgba(255,255,255,.4)}
+.scn{font-size:30px;font-weight:500;color:var(--blk);margin-top:3px;font-family:var(--mono)}
+.sc.r .scn,.sc.k .scn{color:#fff}
+
+/* BARS */
+.bar-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.bar-l{font-size:13px;color:#555;width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.bar-w{flex:1;background:#f0f0f0;border-radius:3px;height:8px;overflow:hidden}
+.bar-f{height:100%;border-radius:3px;background:var(--red);transition:width .5s ease}
+.bar-p{font-size:12px;color:var(--sub);width:36px;text-align:right;font-family:var(--mono)}
+
+/* CHART */
+.chart-wrap{background:var(--card);border-radius:14px;border:.5px solid var(--border);padding:16px;margin-bottom:9px}
+.chart-title{font-size:15px;font-weight:500;color:var(--blk);margin-bottom:11px;display:flex;justify-content:space-between;align-items:center}
+.chart-sub{font-size:12px;color:var(--sub);font-weight:400}
+
+.week-bars{display:flex;align-items:flex-end;gap:3px;height:50px}
+.wb-col{flex:1;display:flex;flex-direction:column;align-items:center}
+.wb-bars{width:100%;display:flex;flex-direction:column;justify-content:flex-end;height:46px;gap:1px}
+.wb-done{border-radius:2px 2px 0 0;background:var(--red)}
+.wb-pend{background:#e8e8e8}
+.wb-lbl{font-size:7px;color:var(--sub);margin-top:3px;text-align:center}
+.wb-lbl.today-lbl{color:var(--red);font-weight:600}
+
+.hb-row{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.hb-l{font-size:12px;color:#555;width:72px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.hb-w{flex:1;background:#f0f0f0;border-radius:4px;height:10px;overflow:hidden}
+.hb-f{height:100%;border-radius:4px}
+.hb-p{font-size:11px;color:var(--sub);width:32px;text-align:right;font-family:var(--mono)}
+
+/* SCORE */
+.score-big{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:12px;border:.5px solid var(--border);padding:14px;margin-bottom:7px}
+.score-ring{width:56px;height:56px;border-radius:50%;background:var(--red);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.score-n{font-size:20px;font-weight:600;color:#fff;font-family:var(--mono)}
+.s-title{font-size:14px;font-weight:500;color:var(--blk)}
+.s-sub{font-size:12px;color:var(--sub);margin-top:3px}
+.s-up{color:var(--red)}
+
+/* INSIGHT */
+.insight{display:flex;gap:9px;margin-bottom:6px;padding:10px 12px;background:var(--card);border-radius:10px;border:.5px solid var(--border)}
+.ins-ic{font-size:16px;flex-shrink:0;margin-top:1px}
+.ins-t{font-size:13px;color:#333;line-height:1.5;flex:1}
+.ins-tag{font-size:10px;color:var(--red);background:var(--red-light);padding:2px 7px;border-radius:3px;display:inline-block;margin-top:4px;letter-spacing:.3px}
+.ins-tag.g{color:#27500a;background:#eaf3de}
+.ins-tag.b{color:#3c3489;background:#e8eaf6}
+
+/* NO-DATE TASK */
+.nd-card{background:var(--card);border-radius:12px;border:.5px solid var(--border);padding:12px 14px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.add-btn{padding:7px 14px;border-radius:7px;background:var(--red);border:none;font-size:12px;color:#fff;flex-shrink:0;cursor:pointer}
+
+/* POPUP */
+.popup-overlay{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:100;display:flex;align-items:flex-end;animation:fadeIn .15s}
+.popup-sheet{background:var(--card);border-radius:18px 18px 0 0;padding:20px 16px;width:100%;animation:slideUp .2s ease}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes slideUp{from{transform:translateY(20px)}to{transform:translateY(0)}}
+.pop-title{font-size:15px;font-weight:500;color:var(--blk);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.pop-close{font-size:22px;color:#bbb;cursor:pointer;line-height:1}
+.qbtns{display:flex;gap:6px;margin-bottom:12px;flex-wrap:wrap}
+.qb{padding:8px 16px;border-radius:8px;font-size:13px;color:#555;background:#f5f5f5;border:.5px solid #e5e5e5;cursor:pointer;transition:all .15s}
+.qb.active{background:var(--red);color:#fff;border-color:var(--red)}
+.mcal{display:grid;grid-template-columns:repeat(7,1fr);gap:3px;margin-top:6px}
+.mc-h{font-size:11px;text-align:center;color:#bbb;padding:3px 0}
+.mc-c{font-size:13px;text-align:center;padding:6px 2px;border-radius:6px;color:#555;cursor:pointer;transition:all .1s}
+.mc-c:hover{background:#f5f5f5}
+.mc-c.sel-c{background:var(--red);color:#fff}
+.mc-c.today-c{font-weight:600;color:var(--red)}
+.confirm-btn{width:100%;padding:15px;background:var(--red);color:#fff;border:none;border-radius:12px;font-size:15px;font-weight:500;margin-top:14px;cursor:pointer;letter-spacing:.3px}
+
+/* BOTTOM NAV */
+.bn{background:var(--blk);display:flex;padding:14px 0 22px;flex-shrink:0;border-top:.5px solid #333}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer;transition:all .15s}
+.ni i{font-size:26px;color:rgba(255,255,255,.2);transition:color .15s}
+.ni span{font-size:12px;color:rgba(255,255,255,.2);transition:color .15s;letter-spacing:.2px}
+.ni.active i,.ni.active span{color:#fff}
+.ni.active-red i,.ni.active-red span{color:var(--red)}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:#222;color:#fff;padding:10px 20px;border-radius:24px;font-size:13px;opacity:0;transition:opacity .25s;pointer-events:none;white-space:nowrap;z-index:200;letter-spacing:.2px}
+.toast.show{opacity:1}
+.empty{text-align:center;padding:50px 20px;color:#bbb;font-size:15px}
+
+/* divider line */
+.cal-legend{display:flex;gap:12px;font-size:11px;color:#888;margin-bottom:9px;padding-top:6px;border-top:.5px solid var(--border)}
+</style>
+</head>
+<body>
+
+<!-- STATUS BAR -->
+<div class="sb">
+  <span class="sb-time" id="clock">9:41</span>
+  <span class="sb-brand">KHUMTONE</span>
+  <span class="sb-bat">100%</span>
+</div>
+
+<!-- HEADER -->
+<div class="hdr" id="hdr">
+  <div class="hdr-title" id="hdr-title">กำลังโหลด...</div>
+  <div class="hdr-sub" id="hdr-sub"></div>
+  <div class="pgb"><div class="pgf" id="pgf" style="width:0%"></div></div>
+</div>
+
+<!-- WEEK STRIP -->
+<div class="wstrip" id="wstrip" style="display:none"></div>
+
+<!-- CONTENT -->
+<div class="cnt" id="cnt"></div>
+
+<!-- BOTTOM NAV -->
+<nav class="bn">
+  <div class="ni active" id="nav-all" onclick="switchTab('all')">
+    <i class="ti ti-layout-grid"></i><span>All</span>
+  </div>
+  <div class="ni" id="nav-cal" onclick="switchTab('cal')">
+    <i class="ti ti-calendar"></i><span>ปฏิทิน</span>
+  </div>
+  <div class="ni" id="nav-routine" onclick="switchTab('routine')">
+    <i class="ti ti-repeat"></i><span>Routine</span>
+  </div>
+  <div class="ni" id="nav-tasks" onclick="switchTab('tasks')">
+    <i class="ti ti-list"></i><span>งาน</span>
+  </div>
+  <div class="ni" id="nav-ai" onclick="switchTab('ai')">
+    <i class="ti ti-brain"></i><span>AI</span>
+  </div>
+</nav>
+
+<div class="toast" id="toast"></div>
+<div id="popup"></div>
+
+<script>
+var WEB_APP_URL = "https://script.google.com/macros/s/AKfycbzUocf5fXk59buzOHC7vOYPfuXJC2x5vxozg6AfC9VpA3mlFRxV53aJ_8jnrvFc4eHA/exec";
+var LIFF_ID = "2010213644-d72CVt0y";
+
+var TODAY = new Date();
+var TODAY_STR = fmtDate(TODAY);
+var currentTab = "all";
+var selectedDate = TODAY_STR;
+
+// Data stores
+var todayTasks = [];
+var todayEvents = [];
+var routineItems = [];
+var weekTasks = {};
+var noDateTasks = [];
+var routineStats = { weekStats:{}, monthStats:{}, streak:0 };
+var weekDays = [];
+var popupTaskId = null;
+var popupSelectedDate = TODAY_STR;
+
+// ===================== UTILS =====================
+function fmtDate(d) {
+  return d.getFullYear() + '-' +
+    String(d.getMonth()+1).padStart(2,'0') + '-' +
+    String(d.getDate()).padStart(2,'0');
+}
+function addDays(base, n) {
+  var d = new Date(base + 'T00:00:00+07:00');
+  d.setDate(d.getDate() + n);
+  return fmtDate(d);
+}
+function fmtThai(ds) {
+  var d = new Date(ds + 'T00:00:00+07:00');
+  var days = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+}
+function fmtThaiLong(ds) {
+  var d = new Date(ds + 'T00:00:00+07:00');
+  var days = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  var months = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  return 'วัน' + days[d.getDay()] + ' ' + d.getDate() + ' ' + months[d.getMonth()];
+}
+function nowStr() {
+  var n = new Date();
+  return String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+function isNow(s, e) { var n = nowStr(); return n >= s && n <= e; }
+function pc(c) { return c === 'High' ? 'h' : c === 'Medium' ? 'm' : 'l'; }
+function getRoutineIcon(name) {
+  var u = name.toUpperCase();
+  return u.indexOf('EXERCISE')!==-1?'💪':u.indexOf('STUDY')!==-1?'📚':u.indexOf('ENGLISH')!==-1?'🇬🇧':u.indexOf('READ')!==-1?'📖':u.indexOf('REST')!==-1?'😴':'📌';
+}
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 2500);
+}
+function apiCall(params, cb) {
+  var url = WEB_APP_URL + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+  fetch(url).then(function(r){ return r.json(); }).then(cb).catch(function(e){ console.log('api err',e); });
+}
+function apiSilent(params) {
+  var url = WEB_APP_URL + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
+  fetch(url, { method:'get', mode:'no-cors' }).catch(function(){});
+}
+
+// ===================== CLOCK =====================
+function updateClock() {
+  var n = new Date();
+  document.getElementById('clock').textContent =
+    String(n.getHours()).padStart(2,'0') + ':' + String(n.getMinutes()).padStart(2,'0');
+}
+setInterval(updateClock, 1000); updateClock();
+
+// ===================== WEEK STRIP =====================
+function buildWeekDays() {
+  var d = new Date(TODAY);
+  var dow = d.getDay();
+  var offset = dow === 0 ? -6 : 1 - dow;
+  var mon = new Date(d); mon.setDate(d.getDate() + offset);
+  var thShort = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+  weekDays = [];
+  for (var i = 0; i < 7; i++) {
+    var day = new Date(mon); day.setDate(mon.getDate() + i);
+    weekDays.push({ date: fmtDate(day), day: thShort[day.getDay()], num: day.getDate() });
+  }
+}
+function renderWeekStrip() {
+  var h = '';
+  weekDays.forEach(function(d) {
+    var isT = d.date === TODAY_STR;
+    var isSel = d.date === selectedDate;
+    var cls = 'dp' + (isT?' today':'') + (isSel?' sel':'');
+    var hasDot = (d.date === TODAY_STR && todayTasks.length > 0) ||
+      (weekTasks[d.date] && weekTasks[d.date].length > 0);
+    h += '<div class="'+cls+'" onclick="selectDay(\''+d.date+'\')">';
+    h += '<span class="dl">'+d.day+'</span><span class="dn">'+d.num+'</span>';
+    h += hasDot ? '<div class="dd"></div>' : '<div style="height:6px"></div>';
+    h += '</div>';
+  });
+  document.getElementById('wstrip').innerHTML = h;
+}
+function selectDay(date) {
+  selectedDate = date;
+  if (currentTab === 'all') renderAll();
+  else if (currentTab === 'cal') renderCalDetail(date);
+  renderWeekStrip();
+}
+
+// ===================== TAB SWITCHER =====================
+function switchTab(tab) {
+  currentTab = tab;
+  ['all','cal','routine','tasks','ai'].forEach(function(t) {
+    var el = document.getElementById('nav-'+t);
+    el.className = 'ni' + (t===tab ? (tab==='ai'?' active-red':' active') : '');
+  });
+  var ws = document.getElementById('wstrip');
+  ws.style.display = (tab==='all') ? 'flex' : 'none';
+  if (tab==='all') renderAll();
+  else if (tab==='cal') renderCal();
+  else if (tab==='routine') renderRoutine();
+  else if (tab==='tasks') renderTasksTab();
+  else if (tab==='ai') renderAI();
+}
+
+// ===================== TAB ALL =====================
+function renderAll() {
+  renderWeekStrip();
+  var tasks = selectedDate === TODAY_STR ? todayTasks : (weekTasks[selectedDate] || null);
+  if (tasks === null) {
+    document.getElementById('cnt').innerHTML = '<div class="empty">⏳ กำลังโหลด...</div>';
+    apiCall({ action:'getTasks', date:selectedDate }, function(data) {
+      weekTasks[selectedDate] = data.tasks || [];
+      renderAllContent();
+    });
+    return;
+  }
+  renderAllContent();
+}
+function renderAllContent() {
+  var tasks = selectedDate === TODAY_STR ? todayTasks : (weekTasks[selectedDate] || []);
+  var events = selectedDate === TODAY_STR ? todayEvents : [];
+  var isToday = selectedDate === TODAY_STR;
+  var done = tasks.filter(function(t){ return t.done; }).length;
+  var total = tasks.length;
+  var pct = total > 0 ? Math.round(done/total*100) : 0;
+  var routDone = routineItems.filter(function(r){ return r.done; }).length;
+
+  document.getElementById('hdr-title').textContent = isToday ? fmtThaiLong(TODAY_STR) : fmtThai(selectedDate);
+  var sub = tasks.filter(function(t){ return !t.done; }).length + ' งาน';
+  if (events.length > 0) sub += ' · ' + events.length + ' นัด';
+  if (isToday && routineItems.length > 0) sub += ' · <span class="red">Routine ' + Math.round(routDone/routineItems.length*100) + '%</span>';
+  document.getElementById('hdr-sub').innerHTML = sub;
+  document.getElementById('pgf').style.width = pct + '%';
+
+  var h = '';
+  if (events.length > 0) {
+    h += '<div class="sec">นัดหมาย</div>';
+    events.forEach(function(ev) {
+      h += '<div class="ev"><div class="ev-t">'+ev.title+'</div><div class="ev-s">🕐 '+ev.start+' – '+ev.end+'</div></div>';
+    });
+  }
+  var pending = tasks.filter(function(t){ return !t.done; });
+  var doneArr = tasks.filter(function(t){ return t.done; });
+  if (pending.length > 0) {
+    h += '<div class="sec">งาน ('+pending.length+')</div>';
+    pending.forEach(function(t){ h += taskCard(t, true); });
+  }
+  if (doneArr.length > 0) {
+    h += '<div class="sec">เสร็จแล้ว</div>';
+    doneArr.forEach(function(t){ h += taskCard(t, false); });
+  }
+  if (tasks.length === 0 && events.length === 0) h += '<div class="empty">🎉 ไม่มีงานวันนี้</div>';
+  if (isToday && routineItems.length > 0) {
+    h += '<div class="sec">Routine</div>';
+    routineItems.forEach(function(r) {
+      var isN = isNow(r.start, r.end);
+      h += '<div class="rt'+(isN?' now-rt':'')+'" data-rid="'+r.id+'">';
+      h += '<div class="rc'+(r.done?' done':'')+'">'+( r.done?'✓':getRoutineIcon(r.name))+'</div>';
+      h += '<div class="rn">'+r.name+'</div>';
+      h += '<div style="display:flex;align-items:center;gap:4px"><span class="rtm">'+r.start+'</span>';
+      if (isN && !r.done) h += '<span class="now-tag">Now</span>';
+      h += '</div></div>';
+    });
+  }
+  var cnt = document.getElementById('cnt');
+  cnt.innerHTML = h;
+  cnt.onclick = function(e) {
+    var tc = e.target.closest('[data-tid]');
+    if (tc) { toggleTask(tc.getAttribute('data-tid')); return; }
+    var mv = e.target.closest('[data-move]');
+    if (mv) { e.stopPropagation(); openMovePopup(mv.getAttribute('data-move'), mv.getAttribute('data-name')); return; }
+    var rc = e.target.closest('[data-rid]');
+    if (rc) { toggleRoutine(rc.getAttribute('data-rid')); return; }
+  };
+}
+function taskCard(t, showMove) {
+  var pc2 = pc(t.priority);
+  var h = '<div class="tc'+(t.priority==='High'?' high-border':'')+'" data-tid="'+t.id+'">';
+  h += '<div class="chk'+(t.done?' done':(' '+pc2))+'">'+( t.done?'✓':'')+'</div>';
+  h += '<div style="flex:1;min-width:0"><div class="tn'+(t.done?' done':'')+'">'+t.name+'</div>';
+  h += '<span class="pb '+pc2+'">'+t.priority+'</span></div>';
+  if (showMove && !t.done) h += '<button class="xbtn" data-move="'+t.id+'" data-name="'+t.name+'">เลื่อน</button>';
+  h += '</div>';
+  return h;
+}
+function toggleTask(id) {
+  var task = todayTasks.find(function(t){ return t.id===id; });
+  if (!task) Object.keys(weekTasks).forEach(function(d){ var f=weekTasks[d].find(function(t){ return t.id===id; }); if(f) task=f; });
+  if (!task) return;
+  task.done = !task.done;
+  renderAllContent();
+  showToast(task.done ? '✅ '+task.name : '↩️ '+task.name);
+  apiSilent({ action:'updateTask', id:id, done:task.done });
+}
+function toggleRoutine(rid) {
+  var r = routineItems.find(function(i){ return i.id===rid; });
+  if (!r) return;
+  r.done = !r.done;
+  renderAllContent();
+  showToast(r.done ? '✅ '+r.name : '↩️ '+r.name);
+}
+
+// ===================== MOVE POPUP =====================
+function openMovePopup(id, name) {
+  popupTaskId = id;
+  popupSelectedDate = addDays(selectedDate, 1);
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>เลื่อน "'+name+'"</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div class="qbtns">';
+  h += '<div class="qb" onclick="quickMove(1)">+1 วัน</div>';
+  h += '<div class="qb" onclick="quickMove(3)">+3 วัน</div>';
+  h += '<div class="qb" onclick="quickMove(7)">สัปดาห์หน้า</div>';
+  h += '</div>';
+  h += '<div style="font-size:9px;color:#aaa;margin-bottom:5px">เลือกวันที่</div>';
+  h += renderMiniCal();
+  h += '<button class="confirm-btn" onclick="confirmMove()">ยืนยัน</button>';
+  h += '</div></div>';
+  document.getElementById('popup').innerHTML = h;
+}
+function renderMiniCal() {
+  var now = new Date(TODAY_STR + 'T00:00:00+07:00');
+  var h = '<div class="mcal"><div class="mc-h">จ</div><div class="mc-h">อ</div><div class="mc-h">พ</div><div class="mc-h">พฤ</div><div class="mc-h">ศ</div><div class="mc-h">ส</div><div class="mc-h">อา</div>';
+  var first = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  first = first === 0 ? 6 : first - 1;
+  for (var i=0; i<first; i++) h += '<div></div>';
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  for (var day=1; day<=daysInMonth; day++) {
+    var ds = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var cls = 'mc-c'+(ds===TODAY_STR?' today-c':'')+(ds===popupSelectedDate?' sel-c':'');
+    h += '<div class="'+cls+'" onclick="selectMoveDate(\''+ds+'\')">'+day+'</div>';
+  }
+  h += '</div>';
+  return h;
+}
+function selectMoveDate(date) {
+  popupSelectedDate = date;
+  var sheet = document.querySelector('.popup-sheet');
+  if (sheet) { var mc = sheet.querySelector('.mcal'); if(mc) mc.outerHTML = renderMiniCal(); }
+}
+function quickMove(days) {
+  popupSelectedDate = addDays(selectedDate, days);
+  var sheet = document.querySelector('.popup-sheet');
+  if (sheet) { var mc = sheet.querySelector('.mcal'); if(mc) mc.outerHTML = renderMiniCal(); }
+}
+function confirmMove() {
+  if (!popupTaskId || !popupSelectedDate) return;
+  apiSilent({ action:'moveTask', id:popupTaskId, date:popupSelectedDate });
+  [todayTasks].concat(Object.values(weekTasks)).forEach(function(arr){
+    var idx = arr.findIndex(function(t){ return t.id===popupTaskId; });
+    if (idx !== -1) arr.splice(idx, 1);
+  });
+  showToast('📅 เลื่อนไป '+fmtThai(popupSelectedDate));
+  closePopup(); renderAllContent();
+}
+function closePopup() { document.getElementById('popup').innerHTML = ''; }
+
+// ===================== TAB CALENDAR =====================
+function renderCal() {
+  document.getElementById('hdr-title').textContent = 'พฤษภาคม 2568';
+  document.getElementById('hdr-sub').textContent = 'กดวันเพื่อดูรายละเอียด';
+  document.getElementById('pgf').style.width = '0%';
+  var now = new Date(TODAY_STR + 'T00:00:00+07:00');
+  var thMonthsFull = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
+  document.getElementById('hdr-title').textContent = thMonthsFull[now.getMonth()] + ' ' + (now.getFullYear()+543);
+
+  var h = '<div class="cg">';
+  ['จ','อ','พ','พฤ','ศ','ส','อา'].forEach(function(d){ h += '<div class="ch">'+d+'</div>'; });
+  var first = new Date(now.getFullYear(), now.getMonth(), 1).getDay();
+  first = first === 0 ? 6 : first - 1;
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  for (var i=0; i<first; i++) h += '<div class="cc emp"></div>';
+  for (var day=1; day<=daysInMonth; day++) {
+    var ds = now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(day).padStart(2,'0');
+    var isT = ds===TODAY_STR, isSel = ds===selectedDate;
+    var cls = 'cc'+(isT?' td':'')+(isSel?' sel-day':'');
+    var hasTasks = (ds===TODAY_STR&&todayTasks.length>0)||(weekTasks[ds]&&weekTasks[ds].some(function(t){return !t.done;}));
+    var hasEvents = ds===TODAY_STR && todayEvents.length>0;
+    h += '<div class="'+cls+'" onclick="selectCalDay(\''+ds+'\')">';
+    h += '<div class="cdn">'+day+'</div>';
+    if (hasTasks) h += '<div class="cdt"></div>';
+    if (hasEvents) h += '<div class="cde"></div>';
+    h += '</div>';
+  }
+  h += '</div>';
+  h += '<div class="cal-legend">';
+  h += '<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;border-radius:50%;background:var(--red);display:inline-block"></span>งาน</span>';
+  h += '<span style="display:inline-flex;align-items:center;gap:3px"><span style="width:6px;height:6px;border-radius:50%;background:#888;display:inline-block"></span>นัดหมาย</span>';
+  h += '</div>';
+  h += '<div id="cal-detail">'+renderCalDayDetail(selectedDate)+'</div>';
+  document.getElementById('cnt').innerHTML = h;
+}
+function selectCalDay(date) {
+  selectedDate = date;
+  var det = document.getElementById('cal-detail');
+  if (!det) return;
+  if (weekTasks[date] || date===TODAY_STR) {
+    det.innerHTML = renderCalDayDetail(date);
+  } else {
+    det.innerHTML = '<div class="empty">⏳ กำลังโหลด...</div>';
+    apiCall({ action:'getTasks', date:date }, function(data) {
+      weekTasks[date] = data.tasks || [];
+      if (document.getElementById('cal-detail')) document.getElementById('cal-detail').innerHTML = renderCalDayDetail(date);
+    });
+  }
+  document.querySelectorAll('.cc').forEach(function(el){ el.classList.remove('sel-day'); });
+}
+function renderCalDetail(date) { selectCalDay(date); }
+function renderCalDayDetail(date) {
+  var tasks = date===TODAY_STR ? todayTasks : (weekTasks[date]||[]);
+  var events = date===TODAY_STR ? todayEvents : [];
+  var h = '<div class="cal-day-title">'+fmtThai(date)+'</div>';
+  events.forEach(function(ev){ h += '<div class="ev"><div class="ev-t">'+ev.title+'</div><div class="ev-s">🕐 '+ev.start+' – '+ev.end+'</div></div>'; });
+  tasks.filter(function(t){ return !t.done; }).forEach(function(t){ h += taskCard(t, true); });
+  if (tasks.length===0&&events.length===0) h += '<div style="font-size:10px;color:#bbb;padding:8px 0">ไม่มีงานและนัดหมาย</div>';
+  return h;
+}
+
+// ===================== TAB ROUTINE =====================
+function renderRoutine() {
+  document.getElementById('hdr-title').textContent = 'Routine';
+  document.getElementById('hdr-sub').textContent = 'ภาพรวมสัปดาห์นี้';
+  document.getElementById('pgf').style.width = '0%';
+  var todayDone = routineItems.filter(function(r){ return r.done; }).length;
+  var todayTotal = routineItems.length;
+  var h = '<div class="sg">';
+  h += '<div class="sc r"><div class="scl">วันนี้</div><div class="scn">'+todayDone+'/'+todayTotal+'</div></div>';
+  h += '<div class="sc"><div class="scl">สัปดาห์</div><div class="scn" id="rt-week">--</div></div>';
+  h += '<div class="sc"><div class="scl">Streak</div><div class="scn" id="rt-streak">--</div></div>';
+  h += '<div class="sc k"><div class="scl">เดือนนี้</div><div class="scn" id="rt-month">--</div></div>';
+  h += '</div>';
+  h += '<div class="chart-wrap" id="rt-bars"><div class="chart-title">ความสม่ำเสมอ<span class="chart-sub">สัปดาห์นี้</span></div><div style="font-size:9px;color:#bbb">กำลังโหลด...</div></div>';
+  h += '<div style="font-size:10px;font-weight:500;color:var(--blk);padding:4px 0 5px">วันนี้ · กดติ๊ก</div>';
+  routineItems.forEach(function(r) {
+    var isN = isNow(r.start, r.end);
+    h += '<div class="rt'+(isN?' now-rt':'')+'" data-rid="'+r.id+'">';
+    h += '<div class="rc'+(r.done?' done':'')+'">'+( r.done?'✓':getRoutineIcon(r.name))+'</div>';
+    h += '<div class="rn">'+r.name+'</div>';
+    h += '<div style="display:flex;align-items:center;gap:4px"><span class="rtm">'+r.start+'-'+r.end+'</span>';
+    if (isN && !r.done) h += '<span class="now-tag">Now</span>';
+    h += '</div></div>';
+  });
+  if (routineItems.length===0) h += '<div class="empty">ไม่มี routine วันนี้</div>';
+  var cnt = document.getElementById('cnt');
+  cnt.innerHTML = h;
+  cnt.onclick = function(e) {
+    var rc = e.target.closest('[data-rid]');
+    if (rc) toggleRoutineAndSave(rc.getAttribute('data-rid'));
+  };
+  apiCall({ action:'getRoutineStats' }, function(data) {
+    routineStats = data;
+    var wPcts = Object.values(data.weekStats).map(function(s){ return s.total>0?s.done/s.total:0; });
+    var wAvg = wPcts.length>0 ? Math.round(wPcts.reduce(function(a,b){return a+b;},0)/wPcts.length*100) : 0;
+    var mPcts = Object.values(data.monthStats).map(function(s){ return s.total>0?s.done/s.total:0; });
+    var mAvg = mPcts.length>0 ? Math.round(mPcts.reduce(function(a,b){return a+b;},0)/mPcts.length*100) : 0;
+    var we = document.getElementById('rt-week'); if(we) we.textContent = wAvg+'%';
+    var st = document.getElementById('rt-streak'); if(st) st.textContent = data.streak+' วัน';
+    var mo = document.getElementById('rt-month'); if(mo) mo.textContent = mAvg+'%';
+    var barsEl = document.getElementById('rt-bars');
+    if (barsEl) {
+      var bh = '<div class="chart-title">ความสม่ำเสมอ<span class="chart-sub">สัปดาห์นี้</span></div>';
+      Object.keys(data.weekStats).forEach(function(name) {
+        var s = data.weekStats[name];
+        var pct = s.total>0 ? Math.round(s.done/s.total*100) : 0;
+        bh += '<div class="bar-row"><div class="bar-l">'+getRoutineIcon(name)+' '+name+'</div>';
+        bh += '<div class="bar-w"><div class="bar-f" style="width:'+pct+'%"></div></div>';
+        bh += '<div class="bar-p">'+pct+'%</div></div>';
+      });
+      if (Object.keys(data.weekStats).length===0) bh += '<div style="font-size:9px;color:#bbb">ยังไม่มีข้อมูล</div>';
+      barsEl.innerHTML = bh;
+    }
+  });
+}
+function toggleRoutineAndSave(rid) {
+  var r = routineItems.find(function(i){ return i.id===rid; });
+  if (!r) return;
+  r.done = !r.done;
+  renderRoutine();
+  showToast(r.done ? '✅ '+r.name : '↩️ '+r.name);
+  apiSilent({ action:'saveRoutine', done:routineItems.filter(function(i){return i.done;}).length, total:routineItems.length });
+}
+
+// ===================== TAB TASKS =====================
+function renderTasksTab() {
+  document.getElementById('hdr-title').textContent = 'งานทั้งหมด';
+  document.getElementById('hdr-sub').textContent = 'ยังไม่ได้ลงวัน';
+  document.getElementById('pgf').style.width = '0%';
+  document.getElementById('cnt').innerHTML = '<div class="empty">⏳ กำลังโหลด...</div>';
+  apiCall({ action:'getNoDateTasks' }, function(data) {
+    noDateTasks = data.tasks || [];
+    document.getElementById('hdr-sub').textContent = noDateTasks.length + ' งาน · ยังไม่ได้ลงวัน';
+    var h = '';
+    ['High','Medium','Low'].forEach(function(pri) {
+      var list = noDateTasks.filter(function(t){ return t.priority===pri; });
+      if (list.length > 0) {
+        h += '<div class="sec">'+(pri==='High'?'🔴':pri==='Medium'?'🟡':'🟢')+' '+pri+'</div>';
+        list.forEach(function(t) {
+          h += '<div class="nd-card" id="nd-'+t.id+'">';
+          h += '<div class="chk '+(pc(t.priority))+'"></div>';
+          h += '<div style="flex:1;min-width:0"><div class="tn">'+t.name+'</div><span class="pb '+(pc(t.priority))+'">'+t.priority+'</span></div>';
+          h += '<button class="add-btn" data-addid="'+t.id+'" data-addname="'+t.name+'">+ วัน</button>';
+          h += '</div>';
+        });
+      }
+    });
+    if (noDateTasks.length===0) h = '<div class="empty">🎉 งานทั้งหมดมีวันกำหนดแล้ว</div>';
+    var cnt = document.getElementById('cnt');
+    cnt.innerHTML = h;
+    cnt.onclick = function(e) {
+      var ab = e.target.closest('[data-addid]');
+      if (ab) openAddDatePopup(ab.getAttribute('data-addid'), ab.getAttribute('data-addname'));
+    };
+  });
+}
+function openAddDatePopup(id, name) {
+  popupTaskId = id; popupSelectedDate = TODAY_STR;
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>ใส่วัน "'+name+'"</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div class="qbtns">';
+  h += '<div class="qb active" onclick="selectAddDate(\''+TODAY_STR+'\')">วันนี้</div>';
+  h += '<div class="qb" onclick="selectAddDate(\''+addDays(TODAY_STR,1)+'\')">พรุ่งนี้</div>';
+  h += '<div class="qb" onclick="selectAddDate(\''+addDays(TODAY_STR,3)+'\')">+3 วัน</div>';
+  h += '<div class="qb" onclick="selectAddDate(\''+addDays(TODAY_STR,7)+'\')">สัปดาห์หน้า</div>';
+  h += '</div>';
+  h += '<div style="font-size:9px;color:#aaa;margin-bottom:5px">เลือกวันที่</div>';
+  h += '<div id="add-mini-cal">'+renderMiniCal()+'</div>';
+  h += '<button class="confirm-btn" onclick="confirmAddDate()">ยืนยัน</button>';
+  h += '</div></div>';
+  document.getElementById('popup').innerHTML = h;
+}
+function selectAddDate(date) {
+  popupSelectedDate = date;
+  var mc = document.getElementById('add-mini-cal');
+  if (mc) mc.innerHTML = renderMiniCal();
+}
+function confirmAddDate() {
+  if (!popupTaskId||!popupSelectedDate) return;
+  apiSilent({ action:'setTaskDate', id:popupTaskId, date:popupSelectedDate });
+  noDateTasks = noDateTasks.filter(function(t){ return t.id!==popupTaskId; });
+  showToast('📅 ลงวัน '+fmtThai(popupSelectedDate)+' แล้ว');
+  closePopup(); renderTasksTab();
+}
+
+// ===================== TAB AI =====================
+function renderAI() {
+  document.getElementById('hdr-title').textContent = 'AI Insights';
+  document.getElementById('hdr-sub').textContent = 'Rudy วิเคราะห์วันนี้';
+  document.getElementById('pgf').style.width = '0%';
+  var done = todayTasks.filter(function(t){ return t.done; }).length;
+  var total = todayTasks.length;
+  var pct = total>0 ? Math.round(done/total*100) : 0;
+  var high = todayTasks.filter(function(t){ return t.priority==='High'&&!t.done; }).length;
+  var med = todayTasks.filter(function(t){ return t.priority==='Medium'&&!t.done; }).length;
+  var low2 = todayTasks.filter(function(t){ return t.priority==='Low'&&!t.done; }).length;
+  var allP = high+med+low2;
+
+  var h = '<div class="score-big">';
+  h += '<div class="score-ring"><div class="score-n">'+pct+'</div></div>';
+  h += '<div><div class="s-title">Productivity Score</div>';
+  h += '<div class="s-sub">วันนี้ · '+done+'/'+total+' งานเสร็จ</div></div></div>';
+
+  // Week bars
+  h += '<div class="chart-wrap">';
+  h += '<div class="chart-title">งานเสร็จ vs ค้าง<span class="chart-sub">7 วัน</span></div>';
+  h += '<div class="week-bars">';
+  weekDays.forEach(function(d) {
+    var tasks2 = d.date===TODAY_STR?todayTasks:(weekTasks[d.date]||[]);
+    var doneC = tasks2.filter(function(t){ return t.done; }).length;
+    var pendC = tasks2.filter(function(t){ return !t.done; }).length;
+    var maxH = 44;
+    var tot2 = tasks2.length;
+    var doneH = tot2>0 ? Math.max(4, Math.round(doneC/tot2*maxH)) : 0;
+    var pendH = tot2>0 ? Math.max(pendC>0?4:0, Math.round(pendC/tot2*maxH)) : 0;
+    var isT = d.date===TODAY_STR;
+    h += '<div class="wb-col">';
+    h += '<div class="wb-bars">';
+    if (doneH>0) h += '<div class="wb-done" style="height:'+doneH+'px;width:100%;border-radius:2px 2px 0 0"></div>';
+    if (pendH>0) h += '<div class="wb-pend" style="height:'+pendH+'px;width:100%"></div>';
+    if (tot2===0) h += '<div style="height:3px;background:#f0f0f0;border-radius:2px;margin-top:auto;width:100%"></div>';
+    h += '</div>';
+    h += '<div class="wb-lbl'+(isT?' today-lbl':'')+'">'+d.day+'</div>';
+    h += '</div>';
+  });
+  h += '</div>';
+  h += '<div style="display:flex;gap:10px;margin-top:5px">';
+  h += '<span style="font-size:8px;color:#888;display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:var(--red);display:inline-block;border-radius:1px"></span>เสร็จ</span>';
+  h += '<span style="font-size:8px;color:#888;display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#e8e8e8;display:inline-block;border-radius:1px"></span>ค้าง</span>';
+  h += '</div></div>';
+
+  // Priority distribution
+  if (allP > 0) {
+    h += '<div class="chart-wrap">';
+    h += '<div class="chart-title">Priority distribution<span class="chart-sub">งานค้างวันนี้</span></div>';
+    h += '<div class="hb-row"><div class="hb-l">🔴 High</div><div class="hb-w"><div class="hb-f" style="width:'+Math.round(high/allP*100)+'%;background:var(--red)"></div></div><div class="hb-p" style="color:var(--red)">'+high+'</div></div>';
+    h += '<div class="hb-row"><div class="hb-l">🟡 Medium</div><div class="hb-w"><div class="hb-f" style="width:'+Math.round(med/allP*100)+'%;background:#888"></div></div><div class="hb-p">'+med+'</div></div>';
+    h += '<div class="hb-row"><div class="hb-l">🟢 Low</div><div class="hb-w"><div class="hb-f" style="width:'+Math.round(low2/allP*100)+'%;background:#ccc"></div></div><div class="hb-p">'+low2+'</div></div>';
+    h += '</div>';
+  }
+
+  // Insights
+  if (high>0) h += insight('⚡','High '+high+' อัน ควรทำก่อนอื่น','ด่วน','');
+  if (pct>=70) h += insight('📈','Completion rate '+pct+'% วันนี้ทำได้ดีมาก','จุดแข็ง','g');
+  else if (pct>0) h += insight('💡','ยังเหลืออีก '+(total-done)+' งาน ไปต่อได้เลย','แนะนำ','b');
+  if (noDateTasks.length>0) h += insight('📋','มีงาน '+noDateTasks.length+' อัน ยังไม่ได้ลงวัน','Todo','b');
+  if (h.indexOf('insight')===-1||pct===100) h += insight('🎉','ทำงานเสร็จครบวันนี้แล้ว!','ยอดเยี่ยม','g');
+
+  document.getElementById('cnt').innerHTML = h;
+}
+function insight(icon, text, tag, cls) {
+  return '<div class="insight"><div class="ins-ic">'+icon+'</div><div><div class="ins-t">'+text+'</div><span class="ins-tag '+cls+'">'+tag+'</span></div></div>';
+}
+
+// ===================== INIT =====================
+function init() {
+  buildWeekDays();
+
+  // Load today tasks
+  apiCall({ action:'getTasks', date:TODAY_STR }, function(data) {
+    todayTasks = data.tasks || [];
+    weekTasks[TODAY_STR] = todayTasks;
+    renderAll();
+  });
+
+  // Load events
+  apiCall({ action:'getCalendarEvents', date:TODAY_STR }, function(data) {
+    todayEvents = data.events || [];
+  });
+
+  // Load no-date tasks silently
+  apiCall({ action:'getNoDateTasks' }, function(data) {
+    noDateTasks = data.tasks || [];
+  });
+
+  // Build routine from static data (will be populated from Apps Script)
+  // Placeholder routine for demo
+  var now2 = nowStr();
+  routineItems = [
+    { id:'r1', name:'Exercise', start:'06:00', end:'07:00', done: now2>'07:00' },
+    { id:'r2', name:'Study', start:'20:00', end:'21:00', done:false },
+    { id:'r3', name:'English', start:'21:00', end:'21:30', done:false },
+    { id:'r4', name:'Read Book', start:'21:30', end:'22:00', done:false }
+  ];
+}
+
+setTimeout(function() {
+  try {
+    if (typeof liff !== 'undefined') {
+      liff.init({ liffId: LIFF_ID }).then(init).catch(init);
+    } else { init(); }
+  } catch(e) { init(); }
+}, 300);
+</script>
+</body>
+</html>
