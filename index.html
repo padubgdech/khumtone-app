@@ -704,17 +704,53 @@ function closePopup() { document.getElementById('popup').innerHTML = ''; }
 var calTaskCache = {};
 var calEventCache = {};
 var calExpandedDate = null;
+var calViewYear = new Date().getFullYear();
+var calViewMonth = new Date().getMonth(); // 0-based
+
+function calPrevMonth() {
+  calViewMonth--;
+  if (calViewMonth < 0) { calViewMonth = 11; calViewYear--; }
+  calExpandedDate = null;
+  renderCal();
+}
+function calNextMonth() {
+  calViewMonth++;
+  if (calViewMonth > 11) { calViewMonth = 0; calViewYear++; }
+  calExpandedDate = null;
+  renderCal();
+}
+function calGoToday() {
+  var now = new Date();
+  calViewYear = now.getFullYear();
+  calViewMonth = now.getMonth();
+  calExpandedDate = null;
+  renderCal();
+}
 
 function renderCal() {
-  var now = new Date(TODAY_STR + 'T00:00:00+07:00');
   var thMonthsFull = ['มกราคม','กุมภาพันธ์','มีนาคม','เมษายน','พฤษภาคม','มิถุนายน','กรกฎาคม','สิงหาคม','กันยายน','ตุลาคม','พฤศจิกายน','ธันวาคม'];
-  document.getElementById('hdr-title').textContent = thMonthsFull[now.getMonth()] + ' ' + (now.getFullYear()+543);
-  document.getElementById('hdr-sub').textContent = 'กดวันเพื่อดูรายละเอียด';
+  var yr = calViewYear, mo = calViewMonth + 1;
+  var isCurrentMonth = (yr === new Date().getFullYear() && calViewMonth === new Date().getMonth());
+
+  // Header
+  document.getElementById('hdr-title').textContent = thMonthsFull[calViewMonth] + ' ' + (yr+543);
   document.getElementById('pgf').style.width = '0%';
+
+  // Month nav bar (replace hdr-sub)
+  var subEl = document.getElementById('hdr-sub');
+  subEl.innerHTML =
+    '<div style="display:flex;align-items:center;gap:8px">' +
+    '<button onclick="calPrevMonth()" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:7px;padding:3px 10px;font-size:16px;cursor:pointer;line-height:1">‹</button>' +
+    '<span style="flex:1;text-align:center;font-size:13px;color:rgba(255,255,255,.5)">' +
+      (isCurrentMonth ? 'เดือนนี้' : thMonthsFull[calViewMonth]+' '+(yr+543)) +
+    '</span>' +
+    (isCurrentMonth ? '' : '<button onclick="calGoToday()" style="background:rgba(139,42,42,.5);border:none;color:#fff;border-radius:7px;padding:3px 10px;font-size:11px;cursor:pointer">วันนี้</button>') +
+    '<button onclick="calNextMonth()" style="background:rgba(255,255,255,.1);border:none;color:#fff;border-radius:7px;padding:3px 10px;font-size:16px;cursor:pointer;line-height:1">›</button>' +
+    '</div>';
+
   calTaskCache[TODAY_STR] = todayTasks;
   calEventCache[TODAY_STR] = todayEvents;
-  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
-  var yr = now.getFullYear(), mo = now.getMonth()+1;
+  var daysInMonth = new Date(yr, mo, 0).getDate();
   var first = new Date(yr, mo-1, 1).getDay();
   first = first === 0 ? 6 : first - 1;
   var cells = [];
