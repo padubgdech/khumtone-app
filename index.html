@@ -297,12 +297,26 @@ function showToast(msg) {
   setTimeout(function(){ t.classList.remove('show'); }, 2500);
 }
 function apiCall(params, cb) {
+  var cbName = 'jsonp_' + Date.now() + '_' + Math.floor(Math.random()*10000);
+  params.callback = cbName;
   var url = WEB_APP_URL + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
-  fetch(url).then(function(r){ return r.json(); }).then(cb).catch(function(e){ console.log('api err',e); });
+  var script = document.createElement('script');
+  var timeout = setTimeout(function() {
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+  }, 10000);
+  window[cbName] = function(data) {
+    clearTimeout(timeout);
+    delete window[cbName];
+    if (script.parentNode) script.parentNode.removeChild(script);
+    cb(data);
+  };
+  script.src = url;
+  document.head.appendChild(script);
 }
 function apiSilent(params) {
   var url = WEB_APP_URL + '?' + Object.keys(params).map(function(k){ return k+'='+encodeURIComponent(params[k]); }).join('&');
-  fetch(url, { method:'get', mode:'no-cors' }).catch(function(){});
+  var img = new Image(); img.src = url;
 }
 
 // ===================== CLOCK =====================
