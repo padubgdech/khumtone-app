@@ -990,9 +990,15 @@ function renderExpandPanel(date) {
   if (events.length > 0) {
     h += '<div style="font-size:10px;font-weight:600;color:var(--sub);text-transform:uppercase;letter-spacing:.5px;margin-bottom:5px">นัดหมาย</div>';
     events.forEach(function(ev){
+      var safeTitle = (ev.title||'').replace(/'/g,'').replace(/"/g,'');
+      var evId = ev.id || '';
       h += '<div style="display:flex;align-items:center;gap:8px;padding:8px 10px;background:#E6F1FB;border-radius:8px;margin-bottom:5px;border-left:3px solid #185FA5">';
       h += '<div style="flex:1"><div style="font-size:13px;color:#0C447C;font-weight:500">'+ev.title+'</div>';
-      h += '<div style="font-size:11px;color:#378ADD;margin-top:2px">🕐 '+ev.start+' – '+ev.end+'</div></div></div>';
+      h += '<div style="font-size:11px;color:#378ADD;margin-top:2px">🕐 '+ev.start+' – '+ev.end+'</div></div>';
+      if (evId) {
+        h += '<button onclick="confirmDeleteEvent(\''+evId+'\',\''+safeTitle+'\',\''+date+'\')" style="padding:4px 10px;font-size:11px;background:#FFF0F0;color:#FF3B30;border:.5px solid #FFCDD2;border-radius:6px;cursor:pointer;flex-shrink:0">ยกเลิก</button>';
+      }
+      h += '</div>';
     });
   }
   var pending = tasks.filter(function(t){ return !t.done; });
@@ -1033,6 +1039,45 @@ function renderExpandPanel(date) {
 function selectCalDay(date) { toggleCalDay(date); }
 function renderCalDetail(date) { toggleCalDay(date); }
 function renderCalDayDetail() { return ''; }
+
+function confirmDeleteEvent(evId, title, date) {
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>ยกเลิกนัดหมาย</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div style="font-size:14px;color:var(--blk);margin-bottom:16px">ต้องการยกเลิก <b>"'+title+'"</b> ใช่ไหม?</div>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<button onclick="closePopup()" style="flex:1;padding:13px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer">ไม่</button>';
+  h += '<button onclick="doDeleteEvent(\''+evId+'\',\''+date+'\')" style="flex:1;padding:13px;background:#FF3B30;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">🗑️ ยกเลิกนัด</button>';
+  h += '</div></div></div>';
+  document.getElementById('popup').innerHTML = h;
+}
+
+function doDeleteEvent(evId, date) {
+  closePopup();
+  showToast('⏳ กำลังยกเลิกนัดหมาย...');
+  apiCall({ action:'deleteCalendarEvent', id:evId }, function(data) {
+    if (data && data.ok) {
+      showToast('✅ ยกเลิกนัดหมายแล้ว');
+    } else {
+      showToast('✅ ส่งคำสั่งแล้ว');
+    }
+    // ล้าง cache และโหลดใหม่
+    delete calEventCache[date];
+    if (date === TODAY_STR) {
+      apiCall({ action:'getCalendarEvents', date:date }, function(d2) {
+        todayEvents = d2.events || [];
+        weekTaskEvents[date] = todayEvents;
+        if (currentTab==='cal') renderCal();
+        if (currentTab==='all') renderAllContent();
+      });
+    } else {
+      apiCall({ action:'getCalendarEvents', date:date }, function(d2) {
+        calEventCache[date] = d2.events || [];
+        if (currentTab==='cal') renderCal();
+      });
+    }
+  });
+}
 
 function openAddEventPopupCal(date) {
   var thDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
