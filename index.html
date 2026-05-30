@@ -1050,10 +1050,13 @@ function renderTasksTab() {
           h += '<div style="position:absolute;right:0;top:0;bottom:0;width:72px;background:#FF3B30;display:flex;align-items:center;justify-content:center;border-radius:0 12px 12px 0">';
           h += '<div style="text-align:center"><i class="ti ti-trash" style="font-size:18px;color:#fff"></i><div style="font-size:10px;color:#fff;margin-top:2px">ลบ</div></div>';
           h += '</div>';
-          h += '<div class="nd-card" id="nd-'+t.id+'" style="position:relative;z-index:1;transition:transform .25s ease;margin-bottom:0;border-radius:12px;" data-swipe-id="'+t.id+'" ...>';
+          h += '<div class="nd-card" id="nd-'+t.id+'">';
           h += '<div class="chk '+(pc(t.priority))+'"></div>';
           h += '<div style="flex:1;min-width:0"><div class="tn">'+t.name+'</div><span class="pb '+(pc(t.priority))+'">'+t.priority+'</span></div>';
+          h += '<div style="display:flex;gap:6px;flex-shrink:0">';
           h += '<button class="add-btn" data-addid="'+t.id+'" data-addname="'+safeName+'">+ วัน</button>';
+          h += '<button onclick="confirmDeleteTask(\''+t.id+'\',\''+safeName+'\')" style="padding:7px 10px;border-radius:8px;background:#FF3B30;border:none;color:#fff;font-size:13px;cursor:pointer"><i class="ti ti-trash" style="font-size:14px"></i></button>';
+          h += '</div>';
           h += '</div>';
           h += '</div>';
         });
