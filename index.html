@@ -25,21 +25,21 @@ html,body{height:100%;overflow:hidden;background:var(--blk)}
 body{display:flex;flex-direction:column;width:100%;min-height:100vh;position:relative}
 
 /* STATUS BAR */
-.sb{background:var(--blk);padding:12px 18px 6px;display:flex;justify-content:space-between;align-items:center;flex-shrink:0}
+.sb{display:none;}
 .sb-time{font-family:var(--mono);font-size:16px;color:rgba(255,255,255,.6);letter-spacing:.5px}
-.sb-brand{font-size:13px;letter-spacing:2px;color:rgba(255,255,255,.25);text-transform:uppercase}
-.sb-bat{font-size:13px;color:rgba(255,255,255,.4)}
+.sb-brand{font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.25);text-transform:uppercase;font-weight:500}
+.sb-bat{font-size:11px;color:rgba(255,255,255,.25)}
 
 /* HEADER */
-.hdr{background:var(--blk);padding:6px 18px 14px;flex-shrink:0}
-.hdr-title{font-size:24px;font-weight:500;color:#fff;letter-spacing:.2px}
-.hdr-sub{font-size:15px;color:rgba(255,255,255,.35);margin-top:4px}
+.hdr{background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);padding:12px 18px 10px;flex-shrink:0}
+.hdr-title{font-size:22px;font-weight:500;color:#fff;letter-spacing:.2px}
+.hdr-sub{font-size:13px;color:rgba(255,255,255,.35);margin-top:4px}
 .hdr-sub .red{color:var(--red)}
-.pgb{background:rgba(255,255,255,.1);border-radius:2px;height:3px;margin-top:10px}
+.pgb{background:rgba(255,255,255,.1);border-radius:2px;height:2px;margin-top:8px}
 .pgf{height:100%;border-radius:2px;background:var(--red);transition:width .4s ease}
 
 /* WEEK STRIP */
-.wstrip{display:flex;gap:5px;padding:10px 14px 11px;background:var(--blk);flex-shrink:0}
+.wstrip{display:flex;gap:5px;padding:8px 14px 10px;background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);flex-shrink:0;margin-bottom:-4px}
 .dp{flex:1;text-align:center;padding:7px 2px;border-radius:10px;cursor:pointer;user-select:none;transition:all .15s}
 .dp.sel{background:var(--red)}
 .dp.today{background:rgba(139,42,42,.2);outline:1px solid rgba(139,42,42,.6)}
@@ -51,8 +51,7 @@ body{display:flex;flex-direction:column;width:100%;min-height:100vh;position:rel
 .dp.sel .dd{background:rgba(255,255,255,.6)}
 
 /* CONTENT */
-.cnt{flex:1;overflow-y:auto;padding:0 14px 10px;background:var(--bg);scrollbar-width:none}
-.cnt::-webkit-scrollbar{display:none}
+.cnt{flex:1;overflow-y:auto;padding:0 14px 10px;background:var(--bg);scrollbar-width:none}.cnt::-webkit-scrollbar{display:none}
 
 .sec{font-size:12px;font-weight:600;color:var(--sub);letter-spacing:1px;text-transform:uppercase;padding:12px 0 6px}
 
@@ -230,18 +229,18 @@ body{display:flex;flex-direction:column;width:100%;min-height:100vh;position:rel
 
 <!-- STATUS BAR -->
 <div class="sb">
-  <span class="sb-brand">KHUMTONE</span>
-  <span class="sb-bat" id="sb-bat"></span>
+  <span class="sb-brand" style="font-size:11px;letter-spacing:3px;color:rgba(255,255,255,.25);font-weight:500">KHUMTONE</span>
+  <span class="sb-bat" id="sb-bat" style="font-size:11px;color:rgba(255,255,255,.25)" id="sb-time"></span>
 </div>
 
-<!-- HEADER -->
-<div class="hdr" id="hdr">
-  <div class="hdr-title" id="hdr-title">กำลังโหลด...</div>
+<!-- HEADER — ซ่อนเมื่อ Main tab ใช้ gradient card แทน -->
+<div class="hdr" id="hdr" style="padding:0 18px 10px">
+  <div class="hdr-title" id="hdr-title" style="font-size:22px"></div>
   <div class="hdr-sub" id="hdr-sub"></div>
   <div class="pgb"><div class="pgf" id="pgf" style="width:0%"></div></div>
 </div>
 
-<!-- WEEK STRIP -->
+<!-- WEEK STRIP — แสดงใน cnt แทน (renderAllContent จะ inject เข้าไป) -->
 <div class="wstrip" id="wstrip" style="display:none"></div>
 
 <!-- CONTENT -->
@@ -372,12 +371,17 @@ function renderWeekStrip() {
     var cls = 'dp' + (isT?' today':'') + (isSel?' sel':'');
     var hasDot = (d.date === TODAY_STR && todayTasks.length > 0) ||
       (weekTasks[d.date] && weekTasks[d.date].length > 0);
-    h += '<div class="'+cls+'" onclick="selectDay(\''+d.date+'\')">';
+    h += '<div class="'+cls+'" onclick="selectDay(\''+d.date+'\')" style="flex:1;text-align:center;padding:6px 2px;border-radius:10px;cursor:pointer">';
     h += '<span class="dl">'+d.day+'</span><span class="dn">'+d.num+'</span>';
     h += hasDot ? '<div class="dd"></div>' : '<div style="height:6px"></div>';
     h += '</div>';
   });
-  document.getElementById('wstrip').innerHTML = h;
+  // render ใน wstrip-inline (ใน gradient card) ถ้ามี
+  var inlineEl = document.getElementById('wstrip-inline');
+  if (inlineEl) { inlineEl.innerHTML = h; return; }
+  // fallback ใน wstrip เดิม
+  var wsEl = document.getElementById('wstrip');
+  if (wsEl) wsEl.innerHTML = h;
 }
 function selectDay(date) {
   selectedDate = date;
@@ -395,6 +399,8 @@ function switchTab(tab) {
   });
   var ws = document.getElementById('wstrip');
   ws.style.display = (tab==='all') ? 'flex' : 'none';
+  var hdr = document.getElementById('hdr');
+  if (hdr) hdr.style.display = tab==='all' ? 'none' : 'block';
   if (tab==='all') renderAll();
   else if (tab==='cal') renderCal();
   else if (tab==='routine') renderRoutine();
@@ -434,48 +440,63 @@ function renderAllContent() {
   var doneArr = tasks.filter(function(t){ return t.done; });
   var routDone = routineItems.filter(function(r){ return r.done; }).length;
 
-  // Header
+  // Header — ซ่อน/แสดง hdr element
+  var elHdr = document.getElementById('hdr');
   var elTitle = document.getElementById('hdr-title');
   var elSub = document.getElementById('hdr-sub');
   var elPgf = document.getElementById('pgf');
-  if (elTitle) elTitle.textContent = isToday ? fmtThaiLong(TODAY_STR) : fmtThai(selectedDate);
-  if (elSub) {
-    var subParts = [];
-    if (pending.length > 0) subParts.push(pending.length + ' งานค้าง');
-    if (events.length > 0) subParts.push(events.length + ' นัด');
-    if (isToday && routineItems.length > 0) subParts.push('<span class="red">Routine ' + Math.round(routDone/routineItems.length*100) + '%</span>');
-    elSub.innerHTML = subParts.join(' · ') || 'ไม่มีงานวันนี้';
+
+  if (isToday) {
+    // ซ่อน default header — gradient card จะแสดงแทน
+    if (elHdr) elHdr.style.display = 'none';
+  } else {
+    if (elHdr) elHdr.style.display = 'block';
+    if (elTitle) elTitle.textContent = fmtThai(selectedDate);
+    if (elSub) {
+      var subParts = [];
+      if (pending.length > 0) subParts.push(pending.length + ' งานค้าง');
+      if (events.length > 0) subParts.push(events.length + ' นัด');
+      elSub.innerHTML = subParts.join(' · ') || 'ไม่มีงานและนัดหมาย';
+    }
+    if (elPgf) elPgf.style.width = pct + '%';
   }
-  if (elPgf) elPgf.style.width = pct + '%';
 
   var h = '';
 
-  // ===== PROGRESS CARD =====
+  // ===== GRADIENT HEADER CARD (วันนี้เท่านั้น) =====
   if (isToday) {
-    h += '<div class="prog-card">';
-    h += '<div class="prog-header"><span class="prog-title">งานวันนี้</span><span class="prog-pct">'+pct+'%</span></div>';
-    h += '<div class="prog-bar-main"><div class="prog-bar-fill" style="width:'+pct+'%"></div></div>';
-    h += '<div class="prog-stats">';
-    h += '<span class="prog-stat"><b>'+done+'</b> เสร็จ</span>';
-    h += '<span class="prog-stat"><b>'+pending.length+'</b> ค้าง</span>';
-    h += '<span class="prog-stat"><b>'+total+'</b> ทั้งหมด</span>';
-    h += '</div></div>';
+    var thDaysFull = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+    var thMonths = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+    var now2 = new Date();
+    var dateLabel = 'วัน'+thDaysFull[now2.getDay()]+' '+now2.getDate()+' '+thMonths[now2.getMonth()];
 
-    // ===== RUDY QUOTE =====
-    var quotes = [
-      { text: 'วันนี้ทำได้ดีแน่นอน คุณเดชทำงานหนักมาตลอด วันนี้ก็ไม่ต่างกัน 💪' },
-      { text: 'งานค้างคือโอกาสที่ยังรอคุณเดชอยู่ ไปจัดการให้หมดเลยนะคะ' },
-      { text: 'ทำทีละอย่าง โฟกัสทีละงาน แล้วทุกอย่างจะเสร็จเองค่ะ คุณเดช' },
-      { text: 'ถ้าไม่แน่ใจว่าจะเริ่มตรงไหน เริ่มจาก High priority ก่อนเลยค่ะ' },
-      { text: 'วันนี้เสร็จครบ พรุ่งนี้จะเริ่มได้เต็มที่เลย อย่าให้งานค้างข้ามวันนะคะ' },
-      { text: 'ธุรกิจที่ดีสร้างจากนิสัยที่ดีทุกวัน ไปทำงานที่ impact สูงก่อนเลยค่ะ คุณเดช' },
-      { text: 'Rudy เป็นห่วงนะคะ ถ้างาน High เยอะ รีบจัดการก่อนเลย อย่าปล่อยข้ามวัน' },
-    ];
-    var q = quotes[new Date().getDay() % quotes.length];
-    h += '<div class="quote-card">';
-    h += '<div class="quote-text">'+q.text+'</div>';
-    h += '<div class="quote-author">— Rudy</div>';
+    h += '<div style="background:linear-gradient(160deg,#1a1a2e 0%,#16213e 60%,#0f3460 100%);margin:-1px -14px 0 -14px;padding:16px 18px 0">';
+
+    h += '<div style="font-size:10px;color:rgba(255,255,255,.35);margin-bottom:4px;letter-spacing:.3px">'+dateLabel+'</div>';
+    h += '<div style="font-size:26px;font-weight:500;color:#fff;letter-spacing:-.3px;margin-bottom:14px">งานวันนี้</div>';
+
+    // stats row
+    h += '<div style="display:flex;background:rgba(255,255,255,.06);border-radius:10px;overflow:hidden">';
+    h += '<div style="flex:1;padding:10px;text-align:center;border-right:0.5px solid rgba(255,255,255,.08)">';
+    h += '<div style="font-size:20px;font-weight:500;color:#FF3B30">'+pending.length+'</div>';
+    h += '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">ค้าง</div></div>';
+    h += '<div style="flex:1;padding:10px;text-align:center;border-right:0.5px solid rgba(255,255,255,.08)">';
+    h += '<div style="font-size:20px;font-weight:500;color:#34C759">'+done+'</div>';
+    h += '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">เสร็จ</div></div>';
+    h += '<div style="flex:1;padding:10px;text-align:center">';
+    h += '<div style="font-size:20px;font-weight:500;color:#BF5AF2">'+pct+'%</div>';
+    h += '<div style="font-size:9px;color:rgba(255,255,255,.3);margin-top:2px">สำเร็จ</div></div>';
     h += '</div>';
+
+    // progress bar
+    h += '<div style="height:3px;background:rgba(255,255,255,.08);border-radius:3px;margin-top:12px">';
+    h += '<div style="width:'+pct+'%;height:100%;background:#BF5AF2;border-radius:3px;transition:width .4s ease"></div>';
+    h += '</div>';
+
+    // week strip ในกล่อง gradient
+    h += '<div id="wstrip-inline" style="display:flex;gap:5px;padding:8px 0 12px"></div>';
+    h += '</div>';
+    h += '<div style="margin-bottom:10px"></div>';
   }
 
   // ===== EVENTS วันที่เลือก =====
@@ -551,6 +572,8 @@ function renderAllContent() {
     if (undoBtn) { e.stopPropagation(); cancelTask(undoBtn.getAttribute('data-undoid')); return; }
     var editBtn = e.target.closest('[data-editid]');
     if (editBtn) { e.stopPropagation(); openEditTaskPopup(editBtn.getAttribute('data-editid'), editBtn.getAttribute('data-editname'), editBtn.getAttribute('data-editpri')); return; }
+    var noteBtn = e.target.closest('[data-noteid]');
+    if (noteBtn) { e.stopPropagation(); openNotePopup(noteBtn.getAttribute('data-noteid'), noteBtn.getAttribute('data-notename'), noteBtn.getAttribute('data-notetxt')); return; }
     var rc = e.target.closest('[data-rid]');
     if (rc) { toggleRoutine(rc.getAttribute('data-rid')); return; }
   };
@@ -559,29 +582,35 @@ function renderAllContent() {
 function taskCard(t, showMove) {
   var pc2 = pc(t.priority);
   var priColor = t.priority==='High' ? '#FF3B30' : t.priority==='Medium' ? '#FF9500' : '#34C759';
+  var priDark = t.priority==='High' ? '#791F1F' : t.priority==='Medium' ? '#854F0B' : '#27500A';
   var bLeft = t.priority==='High' ? 'border-left:3px solid #FF3B30;' : t.priority==='Medium' ? 'border-left:3px solid #FF9500;' : 'border-left:3px solid #34C759;';
   var safeName = t.name.replace(/'/g,'').replace(/"/g,'');
-  var h = '<div class="tc" style="'+bLeft+'flex-direction:column;align-items:stretch">';
-  h += '<div style="display:flex;align-items:center;gap:10px">';
-  h += '<div style="width:8px;height:8px;border-radius:50%;background:'+priColor+';flex-shrink:0;margin-top:2px"></div>';
+  var safeNote = (t.note||'').replace(/'/g,'').replace(/"/g,'');
+  var h = '<div class="tc" style="'+bLeft+'flex-direction:column;align-items:stretch;border-radius:0 14px 14px 0;padding:12px 14px">';
+  // Row 1: dot + ชื่อ
+  h += '<div style="display:flex;align-items:flex-start;gap:10px;margin-bottom:8px">';
+  h += '<div style="width:7px;height:7px;border-radius:50%;background:'+priColor+';flex-shrink:0;margin-top:5px"></div>';
   h += '<div style="flex:1;min-width:0">';
   h += '<div class="tn'+(t.done?' done':'')+'">'+t.name+'</div>';
+  if (t.note) h += '<div style="font-size:11px;color:var(--sub);margin-top:5px;padding:5px 8px;background:var(--bg);border-radius:6px;border-left:2px solid #ddd;line-height:1.5">📝 '+t.note+'</div>';
   h += '<span class="pb '+pc2+'">'+t.priority+'</span>';
-  h += '</div>';
+  h += '</div></div>';
+  // Row 2: ปุ่ม
   if (!t.done) {
-    h += '<div style="display:flex;gap:5px;flex-shrink:0">';
-    h += '<button data-doneid="'+t.id+'" style="padding:6px 12px;font-size:12px;font-weight:500;background:var(--red);color:#fff;border:none;border-radius:7px;cursor:pointer">✓ Done</button>';
-    h += '<button data-editid="'+t.id+'" data-editname="'+safeName+'" data-editpri="'+t.priority+'" style="padding:6px 10px;font-size:12px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">แก้ไข</button>';
-    if (showMove) h += '<button data-moveid="'+t.id+'" data-movename="'+safeName+'" style="padding:6px 10px;font-size:12px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">เลื่อน</button>';
-    h += '<button data-delid="'+t.id+'" data-delname="'+safeName+'" style="padding:6px 10px;font-size:12px;background:#FFF0F0;color:#FF3B30;border:.5px solid #FFCDD2;border-radius:7px;cursor:pointer">ลบ</button>';
+    h += '<div style="display:flex;gap:5px;padding-left:17px">';
+    h += '<button data-doneid="'+t.id+'" style="flex:3;padding:7px 0;font-size:11px;font-weight:500;background:'+priDark+';color:#fff;border:none;border-radius:7px;cursor:pointer">✓ Done</button>';
+    h += '<button data-editid="'+t.id+'" data-editname="'+safeName+'" data-editpri="'+t.priority+'" style="flex:2;padding:7px 0;font-size:11px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">แก้ไข</button>';
+    h += '<button data-noteid="'+t.id+'" data-notename="'+safeName+'" data-notetxt="'+safeNote+'" style="flex:2;padding:7px 0;font-size:11px;background:'+(t.note?'#FFF8E6':'var(--card)')+';color:'+(t.note?'#854F0B':'var(--sub)')+';border:.5px solid '+(t.note?'#FAC775':'var(--border)')+';border-radius:7px;cursor:pointer">📝 Note</button>';
+    if (showMove) h += '<button data-moveid="'+t.id+'" data-movename="'+safeName+'" style="flex:2;padding:7px 0;font-size:11px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">เลื่อน</button>';
+    h += '<button data-delid="'+t.id+'" data-delname="'+safeName+'" style="flex:2;padding:7px 0;font-size:11px;background:#FFF0F0;color:#FF3B30;border:.5px solid #FFCDD2;border-radius:7px;cursor:pointer">ลบ</button>';
     h += '</div>';
   } else {
-    h += '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
-    h += '<span style="font-size:12px;color:#34C759">✓ Done</span>';
-    h += '<button data-undoid="'+t.id+'" style="padding:4px 10px;font-size:11px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:6px;cursor:pointer">Undo</button>';
+    h += '<div style="display:flex;align-items:center;gap:8px;padding-left:17px">';
+    h += '<i class="ti ti-circle-check" style="font-size:15px;color:#34C759;flex-shrink:0" aria-hidden="true"></i>';
+    h += '<span style="font-size:12px;color:#34C759;flex:1">เสร็จแล้ว</span>';
+    h += '<button data-undoid="'+t.id+'" style="padding:5px 14px;font-size:11px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">ยกเลิก</button>';
     h += '</div>';
   }
-  h += '</div>';
   h += '</div>';
   return h;
 }
@@ -759,16 +788,23 @@ function submitAddEvent() {
   var reminder = (document.getElementById('add-ev-reminder')||{}).value || '30';
   var date = (document.getElementById('add-ev-date')||{}).value || TODAY_STR;
   if (!name.trim()) { showToast('กรุณาใส่ชื่อนัดหมาย'); return; }
-  showToast('⏳ กำลังเพิ่มนัดหมาย...');
+  showToast('⏳ กำลังบันทึกนัดหมาย...');
   closePopup();
   apiCall({ action:'addCalendarEvent', name:encodeURIComponent(name.trim()), date:date, startTime:start, endTime:end, reminder:reminder }, function(data) {
     if (data && data.ok) {
-      showToast('📅 เพิ่มนัดหมายแล้ว: '+name.trim());
-      delete calEventCache[date];
-      if (currentTab==='cal') renderCal();
+      showToast('📅 บันทึกนัดหมายแล้ว: '+name.trim());
     } else {
-      showToast('❌ เพิ่มไม่ได้ ลองใหม่');
+      showToast('✅ ส่งคำสั่งแล้ว (ตรวจสอบใน Calendar)');
     }
+    delete calEventCache[date];
+    weekTaskEvents[date] = undefined;
+    apiCall({ action:'getCalendarEvents', date:date }, function(d2) {
+      var evs = d2.events || [];
+      if (date === TODAY_STR) todayEvents = evs;
+      weekTaskEvents[date] = evs;
+      if (currentTab==='all' && selectedDate===date) renderAllContent();
+      if (currentTab==='cal') renderCal();
+    });
   });
 }
 function selectAddPriority(el, pri) {
@@ -1042,12 +1078,31 @@ function submitAddEventCal() {
   var rem = (document.getElementById('add-ev-rem-cal')||{}).value || '30';
   var date = (document.getElementById('add-ev-date-cal')||{}).value || TODAY_STR;
   if (!name.trim()) { showToast('กรุณาใส่ชื่อนัดหมาย'); return; }
-  showToast('⏳ กำลังเพิ่มนัดหมาย...');
+  showToast('⏳ กำลังบันทึกนัดหมาย...');
   closePopup();
-  apiCall({ action:'addCalendarEvent', name:encodeURIComponent(name.trim()), date:date, startTime:start, endTime:end, reminder:rem }, function(data) {
-    showToast('📅 เพิ่มนัดหมายแล้ว: '+name.trim());
+  apiCall({
+    action: 'addCalendarEvent',
+    name: encodeURIComponent(name.trim()),
+    date: date,
+    startTime: start,
+    endTime: end,
+    reminder: rem
+  }, function(data) {
+    if (data && data.ok) {
+      showToast('📅 บันทึกนัดหมายแล้ว: ' + name.trim());
+    } else {
+      showToast('✅ ส่งคำสั่งแล้ว (ตรวจสอบใน Calendar)');
+    }
     delete calEventCache[date];
-    if (currentTab==='cal') renderCal();
+    weekTaskEvents[date] = undefined;
+    if (currentTab === 'cal') renderCal();
+    if (currentTab === 'all' && selectedDate === date) {
+      apiCall({ action:'getCalendarEvents', date:date }, function(d2) {
+        todayEvents = d2.events || [];
+        weekTaskEvents[date] = todayEvents;
+        renderAllContent();
+      });
+    }
   });
 }
 
@@ -1241,13 +1296,39 @@ function submitEditTask() {
   var name = document.getElementById('edit-task-name').value.trim();
   var pri = document.getElementById('edit-task-priority').value;
   if (!name) { showToast('กรุณาใส่ชื่องาน'); return; }
-  // อัพเดทใน local state
   [todayTasks].concat(Object.values(weekTasks)).concat([noDateTasks]).forEach(function(arr){
     arr.forEach(function(t){ if(t.id===id){ t.name=name; t.priority=pri; } });
   });
   showToast('✅ แก้ไขแล้ว');
   closePopup();
   apiSilent({ action:'editTask', id:id, name:encodeURIComponent(name), priority:pri });
+  if (currentTab==='all') renderAllContent();
+  if (currentTab==='tasks') renderTasksTab();
+}
+
+function openNotePopup(id, name, note) {
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>📝 บันทึก Note</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:8px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">'+name+'</div>';
+  h += '<textarea id="note-text" placeholder="จดบันทึก... เช่น รายละเอียด, ลิงก์, สิ่งที่ต้องเตรียม" style="width:100%;padding:12px;border:.5px solid var(--border);border-radius:10px;font-size:13px;min-height:120px;background:var(--card);color:var(--blk);resize:none;font-family:var(--font);line-height:1.6">'+note+'</textarea>';
+  h += '<input type="hidden" id="note-task-id" value="'+id+'">';
+  h += '<button onclick="submitNote()" style="width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;margin-top:10px;cursor:pointer">💾 บันทึก</button>';
+  h += '</div></div>';
+  document.getElementById('popup').innerHTML = h;
+  setTimeout(function(){ var el=document.getElementById('note-text'); if(el) el.focus(); }, 100);
+}
+
+function submitNote() {
+  var id = document.getElementById('note-task-id').value;
+  var note = (document.getElementById('note-text')||{}).value || '';
+  note = note.trim();
+  [todayTasks].concat(Object.values(weekTasks)).concat([noDateTasks]).forEach(function(arr){
+    arr.forEach(function(t){ if(t.id===id) t.note=note; });
+  });
+  showToast('📝 บันทึก Note แล้ว');
+  closePopup();
+  apiSilent({ action:'saveNote', id:id, note:encodeURIComponent(note) });
   if (currentTab==='all') renderAllContent();
   if (currentTab==='tasks') renderTasksTab();
 }
@@ -1308,166 +1389,319 @@ function confirmAddDate() {
   closePopup(); renderTasksTab();
 }
 
-// ===================== TAB AI =====================
-function renderAI() {
-  document.getElementById('hdr-title').textContent = 'AI Insights';
-  document.getElementById('hdr-sub').textContent = 'Rudy วิเคราะห์วันนี้';
-  document.getElementById('pgf').style.width = '0%';
-  var done = todayTasks.filter(function(t){ return t.done; }).length;
-  var total = todayTasks.length;
-  var pct = total>0 ? Math.round(done/total*100) : 0;
-  var high = todayTasks.filter(function(t){ return t.priority==='High'&&!t.done; }).length;
-  var med = todayTasks.filter(function(t){ return t.priority==='Medium'&&!t.done; }).length;
-  var low2 = todayTasks.filter(function(t){ return t.priority==='Low'&&!t.done; }).length;
-  var allP = high+med+low2;
-
-  var h = '<div class="score-big">';
-  h += '<div class="score-ring"><div class="score-n">'+pct+'</div></div>';
-  h += '<div><div class="s-title">Productivity Score</div>';
-  h += '<div class="s-sub">วันนี้ · '+done+'/'+total+' งานเสร็จ</div></div></div>';
-
-  // Week bars
-  h += '<div class="chart-wrap">';
-  h += '<div class="chart-title">งานเสร็จ vs ค้าง<span class="chart-sub">7 วัน</span></div>';
-  h += '<div class="week-bars">';
-  weekDays.forEach(function(d) {
-    var tasks2 = d.date===TODAY_STR?todayTasks:(weekTasks[d.date]||[]);
-    var doneC = tasks2.filter(function(t){ return t.done; }).length;
-    var pendC = tasks2.filter(function(t){ return !t.done; }).length;
-    var maxH = 44;
-    var tot2 = tasks2.length;
-    var doneH = tot2>0 ? Math.max(4, Math.round(doneC/tot2*maxH)) : 0;
-    var pendH = tot2>0 ? Math.max(pendC>0?4:0, Math.round(pendC/tot2*maxH)) : 0;
-    var isT = d.date===TODAY_STR;
-    h += '<div class="wb-col">';
-    h += '<div class="wb-bars">';
-    if (doneH>0) h += '<div class="wb-done" style="height:'+doneH+'px;width:100%;border-radius:2px 2px 0 0"></div>';
-    if (pendH>0) h += '<div class="wb-pend" style="height:'+pendH+'px;width:100%"></div>';
-    if (tot2===0) h += '<div style="height:3px;background:#f0f0f0;border-radius:2px;margin-top:auto;width:100%"></div>';
-    h += '</div>';
-    h += '<div class="wb-lbl'+(isT?' today-lbl':'')+'">'+d.day+'</div>';
-    h += '</div>';
-  });
-  h += '</div>';
-  h += '<div style="display:flex;gap:10px;margin-top:5px">';
-  h += '<span style="font-size:8px;color:#888;display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:var(--red);display:inline-block;border-radius:1px"></span>เสร็จ</span>';
-  h += '<span style="font-size:8px;color:#888;display:flex;align-items:center;gap:3px"><span style="width:8px;height:8px;background:#e8e8e8;display:inline-block;border-radius:1px"></span>ค้าง</span>';
-  h += '</div></div>';
-
-}
-
 // ===================== TAB AI + SUMMARY =====================
 var weeklyStats = null;
 
 function renderAI() {
+  var elHdr = document.getElementById('hdr');
+  if (elHdr) elHdr.style.display = 'block';
   document.getElementById('hdr-title').textContent = 'Summary';
   document.getElementById('hdr-sub').textContent = 'Rudy วิเคราะห์';
   document.getElementById('pgf').style.width = '0%';
 
   var done = todayTasks.filter(function(t){ return t.done; }).length;
-  var total = todayTasks.length;
-  var pct = total>0 ? Math.round(done/total*100) : 0;
-  var high = todayTasks.filter(function(t){ return t.priority==='High'&&!t.done; }).length;
-  var med = todayTasks.filter(function(t){ return t.priority==='Medium'&&!t.done; }).length;
-  var low2 = todayTasks.filter(function(t){ return t.priority==='Low'&&!t.done; }).length;
+  var pending = todayTasks.filter(function(t){ return !t.done; }).length;
 
   var h = '';
 
-  // Profile + stats
+  // 1. Profile card
   h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
-  h += '<div style="display:flex;align-items:center;gap:12px;margin-bottom:14px">';
-  h += '<div style="width:44px;height:44px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0">👤</div>';
-  h += '<div style="flex:1"><div style="font-size:15px;font-weight:500;color:var(--blk)">คุณเดช</div>';
-  h += '<div style="font-size:11px;color:var(--sub);margin-top:2px" id="ai-total-done">กำลังโหลด...</div></div>';
-  h += '<div style="text-align:right"><div style="font-size:22px;font-weight:500;color:var(--red)" id="ai-week-pct">--%</div>';
-  h += '<div style="font-size:10px;color:var(--sub)">สัปดาห์นี้</div></div>';
+  h += '<div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">';
+  h += '<div style="width:36px;height:36px;border-radius:50%;background:var(--red-bg);display:flex;align-items:center;justify-content:center;font-size:14px;flex-shrink:0">👤</div>';
+  h += '<div style="flex:1"><div style="font-size:14px;font-weight:500;color:var(--blk)">คุณเดช</div>';
+  h += '<div style="font-size:11px;color:var(--sub);margin-top:1px" id="ai-total-done">กำลังโหลด...</div></div>';
+  h += '<div style="text-align:right"><div style="font-size:13px;font-weight:500;color:var(--red)" id="ai-streak">🔥 --</div>';
+  h += '<div style="font-size:10px;color:var(--sub)">Streak</div></div>';
   h += '</div>';
   h += '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px">';
-  h += '<div style="background:var(--bg);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--red)">'+done+'</div><div style="font-size:10px;color:var(--sub);margin-top:2px">วันนี้</div></div>';
-  h += '<div style="background:var(--bg);border-radius:10px;padding:10px;text-align:center"><div style="font-size:18px;font-weight:500;color:var(--red)" id="ai-streak">🔥 --</div><div style="font-size:10px;color:var(--sub);margin-top:2px">Streak</div></div>';
-  h += '<div style="background:var(--bg);border-radius:10px;padding:10px;text-align:center"><div style="font-size:20px;font-weight:500;color:var(--red)" id="ai-week-done">--</div><div style="font-size:10px;color:var(--sub);margin-top:2px">สัปดาห์นี้</div></div>';
+  h += '<div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:500;color:var(--red)">'+done+'</div><div style="font-size:10px;color:var(--sub);margin-top:1px">วันนี้</div></div>';
+  h += '<div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:500;color:var(--red)" id="ai-week-done">--</div><div style="font-size:10px;color:var(--sub);margin-top:1px">สัปดาห์นี้</div></div>';
+  h += '<div style="background:var(--bg);border-radius:8px;padding:8px;text-align:center"><div style="font-size:18px;font-weight:500;color:var(--red)">'+pending+'</div><div style="font-size:10px;color:var(--sub);margin-top:1px">ค้างวันนี้</div></div>';
   h += '</div></div>';
 
-  // Bar chart 7 วัน
+  // 2. Line + bar trend
   h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
-  h += '<div style="font-size:11px;font-weight:500;color:var(--sub);margin-bottom:12px">งานเสร็จรายวัน</div>';
-  h += '<div style="display:flex;align-items:flex-end;gap:5px;height:64px" id="ai-bars">';
-  weekDays.forEach(function(d) {
-    var isT = d.date===TODAY_STR;
-    h += '<div style="display:flex;flex-direction:column;align-items:center;flex:1;gap:4px">';
-    h += '<div style="width:100%;background:var(--red-bg);border-radius:3px 3px 0 0;height:8px" id="bar-'+d.date+'"></div>';
-    h += '<div style="font-size:10px;color:'+(isT?'var(--red)':'var(--sub)')+';font-weight:'+(isT?'500':'400')+'">'+d.day+'</div>';
-    h += '</div>';
+  h += '<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:2px">';
+  h += '<div style="font-size:12px;font-weight:500;color:var(--blk)">Productivity รายวัน</div>';
+  h += '<div style="font-size:10px;color:var(--sub)">7 วัน</div></div>';
+  h += '<div style="font-size:11px;color:var(--sub);margin-bottom:10px" id="trend-label">⏳ โหลด...</div>';
+  h += '<div style="position:relative;height:70px;margin-bottom:5px" id="trend-wrap">';
+  h += '<svg id="trend-svg" style="position:absolute;top:0;left:0;width:100%;height:100%;overflow:visible" viewBox="0 0 300 70" preserveAspectRatio="none"></svg>';
+  h += '<div id="trend-bars" style="display:flex;align-items:flex-end;gap:3px;height:70px;position:relative;z-index:1"></div>';
+  h += '</div>';
+  h += '<div style="display:flex;justify-content:space-around;font-size:9px;color:var(--sub)" id="trend-labels"></div>';
+  h += '</div>';
+
+  // 3. Delta รายวัน
+  h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
+  h += '<div style="font-size:12px;font-weight:500;color:var(--blk);margin-bottom:10px">เพิ่ม/ลด เทียบวันก่อน</div>';
+  h += '<div id="delta-rows" style="display:flex;flex-direction:column;gap:7px"><div style="font-size:11px;color:var(--sub)">⏳ โหลด...</div></div>';
+  h += '</div>';
+
+  // 4. Heatmap
+  h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
+  h += '<div style="font-size:12px;font-weight:500;color:var(--blk);margin-bottom:2px">Productivity Heatmap</div>';
+  h += '<div style="font-size:11px;color:var(--sub);margin-bottom:10px">30 วัน · สีเข้ม = งานเยอะ</div>';
+  h += '<div id="heatmap-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:2px;margin-bottom:8px"></div>';
+  h += '<div style="display:flex;align-items:center;gap:5px;font-size:10px;color:var(--sub)">';
+  h += '<span>น้อย</span>';
+  ['#f0f0f0','#f5e6e6','#c97575','#a84040','#8B2A2A'].forEach(function(c){
+    h += '<div style="width:10px;height:10px;border-radius:1px;background:'+c+'"></div>';
   });
+  h += '<span>เยอะ</span></div></div>';
+
+  // 5. Comparison bands
+  h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
+  h += '<div style="font-size:12px;font-weight:500;color:var(--blk);margin-bottom:10px">เทียบสัปดาห์นี้ vs ที่แล้ว</div>';
+  h += '<div id="comp-rows" style="display:flex;flex-direction:column;gap:8px"><div style="font-size:11px;color:var(--sub)">⏳ โหลด...</div></div>';
+  h += '<div style="display:flex;gap:12px;margin-top:10px;font-size:10px;color:var(--sub)">';
+  h += '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:var(--red);display:inline-block;border-radius:1px"></span>สัปดาห์นี้</span>';
+  h += '<span style="display:flex;align-items:center;gap:4px"><span style="width:10px;height:3px;background:#ddd;display:inline-block;border-radius:1px"></span>สัปดาห์ที่แล้ว</span>';
   h += '</div></div>';
 
-  // Rudy วิเคราะห์
-  var rudyMsg = '';
-  if (pct === 100) rudyMsg = 'เยี่ยมมากค่ะ คุณเดช! วันนี้ทำงานครบทุกอย่างแล้ว 🎉 พรุ่งนี้เริ่มได้เต็มที่เลย';
-  else if (high > 0) rudyMsg = 'คุณเดชมีงาน High priority ค้าง '+high+' งาน รีบจัดการก่อนเลยนะคะ มีผลต่อธุรกิจโดยตรง';
-  else if (pct >= 70) rudyMsg = 'ทำได้ดีมากค่ะ Completion rate '+pct+'% วันนี้ ยังเหลืออีกนิดเดียว ไปต่อได้เลย 💪';
-  else if (total === 0) rudyMsg = 'วันนี้ยังไม่มีงานลงวันเลยค่ะ ลองเพิ่มงานหรือเช็คหน้างานด้วยนะคะ';
-  else rudyMsg = 'วันนี้ยังเสร็จ '+done+'/'+total+' งาน อีก '+(total-done)+' งานที่รอคุณเดชอยู่นะคะ ไปลุยต่อค่ะ';
+  // 6. Priority bar
+  h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
+  h += '<div style="font-size:12px;font-weight:500;color:var(--blk);margin-bottom:10px">สัดส่วน Priority (30 วัน)</div>';
+  h += '<div id="pri-bar" style="display:flex;gap:2px;height:6px;border-radius:3px;overflow:hidden;margin-bottom:6px"><div style="flex:1;background:#f0f0f0"></div></div>';
+  h += '<div id="pri-legend" style="display:flex;flex-direction:column;gap:6px;margin-top:10px"></div>';
+  h += '</div>';
 
-  h += '<div style="background:var(--red);border-radius:14px;padding:14px;margin-bottom:8px">';
-  h += '<div style="font-size:10px;font-weight:500;color:rgba(255,255,255,.5);margin-bottom:6px;text-transform:uppercase;letter-spacing:.5px">Rudy วิเคราะห์</div>';
-  h += '<div style="font-size:13px;color:rgba(255,255,255,.9);line-height:1.6">'+rudyMsg+'</div>';
-  h += '<div style="margin-top:10px;display:flex;gap:6px;flex-wrap:wrap">';
-  if (high>0) h += '<div style="background:rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.8)">⚡ High '+high+' ค้าง</div>';
-  if (med>0) h += '<div style="background:rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.6)">🟡 Med '+med+' ค้าง</div>';
-  if (pct>=70) h += '<div style="background:rgba(255,255,255,.15);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.8)">📈 '+pct+'% done</div>';
-  if (noDateTasks.length>0) h += '<div style="background:rgba(255,255,255,.1);border-radius:6px;padding:4px 10px;font-size:11px;color:rgba(255,255,255,.6)">📋 ไม่มีวัน '+noDateTasks.length+' งาน</div>';
-  h += '</div></div>';
+  // 7. Rudy
+  h += '<div style="background:var(--card);border:.5px solid var(--border);border-radius:14px;padding:14px;margin-bottom:8px">';
+  h += '<div style="font-size:10px;font-weight:600;color:var(--sub);letter-spacing:1px;text-transform:uppercase;margin-bottom:8px">Rudy วิเคราะห์</div>';
+  h += '<div id="rudy-text" style="font-size:13px;color:var(--sub);line-height:1.7">⏳ กำลังวิเคราะห์...</div>';
+  h += '</div>';
 
   document.getElementById('cnt').innerHTML = h;
 
-  // โหลด weekly stats จาก API ถ้ามี ถ้าไม่มีใช้ weekTasks แทน
-  function updateBarsFromLocal() {
-    var maxVal = 1;
-    weekDays.forEach(function(d) {
-      var t = d.date===TODAY_STR ? todayTasks : (weekTasks[d.date]||[]);
-      var doneC = t.filter(function(x){ return x.done; }).length;
-      if (doneC > maxVal) maxVal = doneC;
-    });
-    weekDays.forEach(function(d) {
-      var el = document.getElementById('bar-'+d.date);
-      if (!el) return;
-      var t = d.date===TODAY_STR ? todayTasks : (weekTasks[d.date]||[]);
-      var doneC = t.filter(function(x){ return x.done; }).length;
-      el.style.height = Math.max(4, Math.round(doneC/maxVal*64))+'px';
-      el.style.background = d.date===TODAY_STR ? 'var(--red)' : 'var(--red-bg)';
-    });
-    var elWD = document.getElementById('ai-week-done');
-    if (elWD) elWD.textContent = todayTasks.filter(function(t){ return t.done; }).length;
-  }
-  updateBarsFromLocal();
+  // โหลดข้อมูลทั้งหมด
+  var thDays = ['อา','จ','อ','พ','พฤ','ศ','ส'];
 
+  // weekly stats (streak + week total เท่านั้น)
   apiCall({ action:'getWeeklyStats' }, function(data) {
-    if (!data || !data.weekDone) return;
+    if (!data) return;
     weeklyStats = data;
-    var maxVal = Math.max.apply(null, data.weekDone.concat([1]));
-    weekDays.forEach(function(d, i) {
-      var el = document.getElementById('bar-'+d.date);
-      if (el) {
-        el.style.height = Math.max(4, Math.round(data.weekDone[i]/maxVal*64))+'px';
-        el.style.background = d.date===TODAY_STR ? 'var(--red)' : 'var(--red-bg)';
-      }
-    });
     var elWD = document.getElementById('ai-week-done');
-    if (elWD) elWD.textContent = data.totalDone;
-    var elWP = document.getElementById('ai-week-pct');
-    var weekTotal = data.weekDone.reduce(function(a,b){return a+b;},0) + (data.pendingToday||0);
-    var weekPct = weekTotal>0 ? Math.round(data.totalDone/weekTotal*100) : 0;
-    if (elWP) elWP.textContent = weekPct+'%';
-    var elStreak = document.getElementById('ai-streak');
-    if (elStreak) elStreak.textContent = '🔥 '+(data.streak||0);
+    if (elWD) elWD.textContent = data.totalDone || 0;
+    var elStr = document.getElementById('ai-streak');
+    if (elStr) elStr.textContent = '🔥 ' + (data.streak || 0);
   });
 
+  // trend 30 วัน — ไล่เฉดสีตามปริมาณงาน
+  apiCall({ action:'getCompletedTasks', days:30 }, function(cdata2) {
+    var tasks30 = (cdata2 && cdata2.tasks) || [];
+    var now3 = new Date();
+    var byDay = {};
+    var dayLabels = [];
+    for (var i=29; i>=0; i--) {
+      var d3 = new Date(now3); d3.setDate(now3.getDate()-i);
+      var ds3 = d3.getFullYear()+'-'+String(d3.getMonth()+1).padStart(2,'0')+'-'+String(d3.getDate()).padStart(2,'0');
+      byDay[ds3] = 0;
+      dayLabels.push({ ds:ds3, label:thDays[d3.getDay()], date:d3.getDate(), isToday:ds3===TODAY_STR });
+    }
+    tasks30.forEach(function(t){ if (byDay[t.completedDate]!==undefined) byDay[t.completedDate]++; });
+
+    var vals = dayLabels.map(function(d){ return byDay[d.ds]||0; });
+    var maxV = Math.max.apply(null, vals.concat([1]));
+    var prev15 = vals.slice(0,15).reduce(function(a,b){return a+b;},0);
+    var curr15 = vals.slice(15).reduce(function(a,b){return a+b;},0);
+    var diff = curr15 - prev15;
+
+    // trend label
+    var elTL = document.getElementById('trend-label');
+    if (elTL) elTL.innerHTML = diff > 0
+      ? '<span style="color:#3B6D11">↑ +'+diff+' งาน ครึ่งเดือนหลัง vs ต้น</span>'
+      : diff < 0
+      ? '<span style="color:#A32D2D">↓ '+Math.abs(diff)+' งาน ครึ่งเดือนหลัง vs ต้น</span>'
+      : '<span style="color:var(--sub)">เท่ากันทั้งสองช่วง</span>';
+
+    // bars — ไล่เฉดสีตามปริมาณ
+    var barsEl = document.getElementById('trend-bars');
+    if (barsEl) {
+      barsEl.innerHTML = vals.map(function(v,i){
+        var h2 = Math.max(2, Math.round(v/maxV*60));
+        var ratio = v/maxV;
+        var bg;
+        if (v === 0) bg = '#f0f0f0';
+        else if (ratio < 0.25) bg = '#f5e6e6';
+        else if (ratio < 0.5) bg = '#c97575';
+        else if (ratio < 0.75) bg = '#a84040';
+        else bg = '#8B2A2A';
+        var isT = dayLabels[i].isToday;
+        var border = isT ? 'outline:2px solid #8B2A2A;outline-offset:1px;' : '';
+        return '<div style="flex:1;height:'+h2+'px;background:'+bg+';border-radius:2px;z-index:1;'+border+'" title="'+dayLabels[i].ds+': '+v+' งาน"></div>';
+      }).join('');
+    }
+
+    // labels — แสดงเฉพาะวันที่ 1, 8, 15, 22, วันนี้
+    var labEl = document.getElementById('trend-labels');
+    if (labEl) {
+      labEl.innerHTML = dayLabels.map(function(d,i){
+        var show = d.date===1 || d.date===8 || d.date===15 || d.date===22 || d.isToday;
+        if (!show) return '<span></span>';
+        return '<span style="color:'+(d.isToday?'var(--red)':'var(--sub)')+';font-weight:'+(d.isToday?'500':'400')+'">'+d.date+'</span>';
+      }).join('');
+    }
+
+    // SVG line
+    var svgEl = document.getElementById('trend-svg');
+    if (svgEl) {
+      var n = vals.length - 1;
+      var pts = vals.map(function(v,i){
+        var x = Math.round(i*(300/n));
+        var y = Math.round(70 - Math.max(2, v/maxV*60));
+        return x+','+y;
+      }).join(' ');
+      svgEl.innerHTML = '<polyline points="'+pts+'" fill="none" stroke="rgba(139,42,42,.3)" stroke-width="1" stroke-linejoin="round"/>';
+    }
+
+    // delta rows — 7 วันล่าสุด
+    var deltaEl = document.getElementById('delta-rows');
+    if (deltaEl) {
+      var last7 = vals.slice(-7);
+      var last7Labels = dayLabels.slice(-7);
+      var maxV7 = Math.max.apply(null, last7.concat([1]));
+      deltaEl.innerHTML = last7.map(function(v,i){
+        var prev2 = i > 0 ? last7[i-1] : v;
+        var diff2 = v - prev2;
+        var isT = last7Labels[i].isToday;
+        var pct = maxV7 > 0 ? Math.round(v/maxV7*100) : 0;
+        var diffStr = i===0 ? '–' : diff2>0 ? '+'+diff2 : diff2<0 ? ''+diff2 : '0';
+        var diffCol = diff2>0 ? '#3B6D11' : diff2<0 ? '#A32D2D' : '#aaa';
+        var ratio = v/maxV7;
+        var barBg = v===0?'#f0f0f0':ratio<0.25?'#f5e6e6':ratio<0.5?'#c97575':ratio<0.75?'#a84040':'#8B2A2A';
+        return '<div style="display:flex;align-items:center;gap:8px">'+
+          '<div style="font-size:11px;color:'+(isT?'var(--red)':'var(--sub)')+';font-weight:'+(isT?'500':'400')+';width:32px">'+last7Labels[i].label+' '+last7Labels[i].date+'</div>'+
+          '<div style="flex:1;height:5px;background:#f0f0f0;border-radius:3px;overflow:hidden"><div style="width:'+pct+'%;height:100%;background:'+barBg+';border-radius:3px"></div></div>'+
+          '<div style="font-size:10px;color:var(--sub);width:20px;text-align:right">'+v+'</div>'+
+          '<div style="font-size:10px;color:'+diffCol+';width:24px;text-align:right;font-weight:'+(isT?'500':'400')+'">'+diffStr+'</div>'+
+        '</div>';
+      }).join('');
+    }
+    // comparison bands — สัปดาห์นี้ (15 วันหลัง) vs สัปดาห์ก่อน (15 วันแรก)
+    var compEl = document.getElementById('comp-rows');
+    if (compEl) {
+      var thD = ['อา','จ','อ','พ','พฤ','ศ','ส'];
+      // จัดกลุ่มตามวันในสัปดาห์
+      var thisWk = [0,0,0,0,0,0,0]; // 7 วันล่าสุด
+      var prevWk = [0,0,0,0,0,0,0]; // 7-14 วันก่อน
+      dayLabels.slice(-14).forEach(function(d,i){
+        var dow = new Date(d.ds+'T00:00:00+07:00').getDay();
+        if (i < 7) prevWk[dow] += byDay[d.ds]||0;
+        else thisWk[dow] += byDay[d.ds]||0;
+      });
+      var dowOrder = [1,2,3,4,5,6,0]; // จ อ พ พฤ ศ ส อา
+      var todayDow = new Date().getDay();
+      compEl.innerHTML = dowOrder.map(function(dow){
+        var cv = thisWk[dow], pv = prevWk[dow];
+        var maxB = Math.max(cv,pv,1);
+        var pctC = Math.round(cv/maxB*100), pctP = Math.round(pv/maxB*100);
+        var diff3 = cv-pv;
+        var diffStr = diff3>0?'+'+diff3:diff3<0?''+diff3:'0';
+        var diffCol = diff3>0?'#3B6D11':diff3<0?'#A32D2D':'#aaa';
+        var isT = dow===todayDow;
+        return '<div style="display:flex;align-items:center;gap:6px">'+
+          '<div style="font-size:10px;color:'+(isT?'var(--red)':'var(--sub)')+';font-weight:'+(isT?'500':'400')+';width:24px">'+thD[dow]+'</div>'+
+          '<div style="flex:1;display:flex;flex-direction:column;gap:2px">'+
+            '<div style="height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden"><div style="width:'+pctC+'%;height:100%;background:var(--red);border-radius:2px"></div></div>'+
+            '<div style="height:4px;background:#f0f0f0;border-radius:2px;overflow:hidden"><div style="width:'+pctP+'%;height:100%;background:#ddd;border-radius:2px"></div></div>'+
+          '</div>'+
+          '<div style="font-size:10px;color:'+diffCol+';width:24px;text-align:right">'+diffStr+'</div>'+
+        '</div>';
+      }).join('');
+    }
+  });
+
+  // total done
   apiCall({ action:'getCompletedTasks', days:365 }, function(cdata) {
     var elTD = document.getElementById('ai-total-done');
-    if (elTD) elTD.textContent = ((cdata&&cdata.tasks)||[]).length + ' งานที่เสร็จแล้ว';
+    if (elTD) elTD.textContent = ((cdata&&cdata.tasks)||[]).length + ' งานเสร็จแล้ว';
+  });
+
+  // priority + heatmap (30 วัน)
+  apiCall({ action:'getCompletedTasks', days:30 }, function(cdata) {
+    var tasks = (cdata && cdata.tasks) || [];
+    var now2 = new Date();
+    var totalHigh=0, totalMed=0, totalLow=0;
+    var byDate = {};
+    tasks.forEach(function(t) {
+      var d = t.completedDate || '';
+      if (!byDate[d]) byDate[d] = 0;
+      byDate[d]++;
+      if (t.priority==='High') totalHigh++;
+      else if (t.priority==='Medium') totalMed++;
+      else totalLow++;
+    });
+
+    var total30 = totalHigh+totalMed+totalLow;
+    if (total30 > 0) {
+      var hP = Math.round(totalHigh/total30*100);
+      var mP = Math.round(totalMed/total30*100);
+      var lP = 100-hP-mP;
+
+      var priBar = document.getElementById('pri-bar');
+      if (priBar) priBar.innerHTML =
+        '<div style="flex:'+totalHigh+';background:#8B2A2A"></div>'+
+        '<div style="flex:'+totalMed+';background:#c97575"></div>'+
+        '<div style="flex:'+totalLow+';background:#f0d0d0"></div>';
+
+      var priLeg = document.getElementById('pri-legend');
+      if (priLeg) priLeg.innerHTML = [
+        {label:'High', color:'#8B2A2A', count:totalHigh, pct:hP},
+        {label:'Medium', color:'#c97575', count:totalMed, pct:mP},
+        {label:'Low', color:'#f0d0d0', count:totalLow, pct:lP}
+      ].map(function(item){
+        return '<div style="display:flex;align-items:center;gap:8px">'+
+          '<span style="width:8px;height:8px;border-radius:2px;background:'+item.color+';flex-shrink:0;display:inline-block"></span>'+
+          '<div style="flex:1;font-size:12px;color:var(--blk)">'+item.label+'</div>'+
+          '<div style="font-size:12px;font-weight:500;color:var(--blk)">'+item.count+' งาน</div>'+
+          '<div style="font-size:11px;color:var(--sub);width:32px;text-align:right">'+item.pct+'%</div></div>';
+      }).join('');
+    }
+
+    // heatmap 30 วัน
+    var hmEl = document.getElementById('heatmap-grid');
+    if (hmEl) {
+      var days3 = ['จ','อ','พ','พฤ','ศ','ส','อา'];
+      var head = days3.map(function(d){ return '<div style="font-size:8px;color:var(--sub);text-align:center">'+d+'</div>'; }).join('');
+      var maxDay = Math.max.apply(null, Object.values(byDate).concat([1]));
+      var cells = '';
+      for (var i=29; i>=0; i--) {
+        var d2 = new Date(now2); d2.setDate(now2.getDate()-i);
+        var ds = d2.getFullYear()+'-'+String(d2.getMonth()+1).padStart(2,'0')+'-'+String(d2.getDate()).padStart(2,'0');
+        var cnt = byDate[ds] || 0;
+        var ratio = cnt/maxDay;
+        var bg = ratio===0?'#f0f0f0':ratio<0.25?'#f5e6e6':ratio<0.5?'#c97575':ratio<0.75?'#a84040':'#8B2A2A';
+        cells += '<div style="height:14px;border-radius:2px;background:'+bg+'" title="'+ds+': '+cnt+' งาน"></div>';
+      }
+      hmEl.innerHTML = head + cells;
+    }
+  });
+
+  // Rudy วิเคราะห์
+  apiCall({ action:'getCompletedTasks', days:7 }, function(cdata) {
+    var tasks = (cdata && cdata.tasks) || [];
+    if (tasks.length === 0) {
+      var el = document.getElementById('rudy-text');
+      if (el) el.textContent = 'ยังไม่มีงานเสร็จในสัปดาห์นี้เลยค่ะ ไปลุยกันเลยนะคะ 💪';
+      return;
+    }
+    var taskList = tasks.map(function(t,i){ return (i+1)+'. ['+t.priority+'] '+t.name; }).join('\n');
+    apiCall({
+      action: 'askRudy',
+      prompt: encodeURIComponent('วิเคราะห์งานที่คุณเดชทำเสร็จในสัปดาห์นี้ และแนะนำว่าควรเสริมด้านไหนในสัปดาห์หน้า:\n\n'+taskList+'\n\nตอบกระชับ 2-3 ประโยค ภาษาไทย เหมือน Rudy คุยกับคุณเดช ไม่ต้องขึ้นต้นด้วย Rudy:')
+    }, function(data) {
+      var el = document.getElementById('rudy-text');
+      if (el && data && data.reply) el.textContent = data.reply;
+      else if (el) el.textContent = 'ไม่สามารถวิเคราะห์ได้ตอนนี้ค่ะ';
+    });
   });
 }
+
+function renderMonthChart() {}
+function renderWeekChart() {}
+
+function renderWeekChart() {}
 
 function insight(icon, text, tag, cls) {
   return '<div class="insight"><div class="ins-ic">'+icon+'</div><div><div class="ins-t">'+text+'</div><span class="ins-tag '+cls+'">'+tag+'</span></div></div>';
@@ -1490,8 +1724,10 @@ function init() {
 
   var elTitle = document.getElementById('hdr-title');
   var elSub = document.getElementById('hdr-sub');
-  if (elTitle) elTitle.textContent = fmtThaiLong(TODAY_STR);
-  if (elSub) elSub.textContent = 'กำลังโหลด...';
+  var elHdr = document.getElementById('hdr');
+  if (elTitle) elTitle.textContent = '';
+  if (elSub) elSub.textContent = '';
+  if (elHdr) elHdr.style.display = 'none';
 
   // โหลด tasks ก่อน พอเสร็จ render เลย
   apiCall({ action:'getTasks', date:TODAY_STR }, function(data) {
