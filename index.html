@@ -648,8 +648,15 @@ function openAddTaskPopup(date) {
   var label = 'วัน'+thDays[d.getDay()]+' '+d.getDate()+' '+thM[d.getMonth()];
   var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
   h += '<div class="popup-sheet">';
-  h += '<div class="pop-title"><span>+ Add Task</span><span class="pop-close" onclick="closePopup()">×</span></div>';
-  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:10px">📅 '+label+'</div>';
+  h += '<div class="pop-title"><span>เพิ่มรายการ</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">📅 '+label+'</div>';
+  // Toggle Task / Event
+  h += '<div style="display:flex;gap:6px;margin-bottom:14px;background:#f2f2f2;border-radius:10px;padding:4px">';
+  h += '<div id="tab-task-btn" onclick="switchAddTab(\'task\')" style="flex:1;padding:8px;border-radius:8px;background:var(--red);color:#fff;font-size:13px;font-weight:500;text-align:center;cursor:pointer">📋 Task</div>';
+  h += '<div id="tab-event-btn" onclick="switchAddTab(\'event\')" style="flex:1;padding:8px;border-radius:8px;font-size:13px;font-weight:500;text-align:center;cursor:pointer;color:#888">📅 นัดหมาย</div>';
+  h += '</div>';
+  // Task form
+  h += '<div id="form-task">';
   h += '<input id="add-task-name" type="text" placeholder="ชื่องาน..." style="width:100%;padding:12px;border:.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card);color:var(--blk)">';
   h += '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">Priority</div>';
   h += '<div style="display:flex;gap:8px;margin-bottom:14px">';
@@ -659,13 +666,78 @@ function openAddTaskPopup(date) {
   h += '</div>';
   h += '<input type="hidden" id="add-task-priority" value="Medium">';
   h += '<input type="hidden" id="add-task-date" value="'+date+'">';
-  h += '<button onclick="submitAddTask()" style="width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">บันทึก</button>';
+  h += '<button onclick="submitAddTask()" style="width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">+ บันทึก Task</button>';
+  h += '</div>';
+  // Event form (hidden by default)
+  h += '<div id="form-event" style="display:none">';
+  h += '<input id="add-ev-name" type="text" placeholder="ชื่อนัดหมาย..." style="width:100%;padding:12px;border:.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card);color:var(--blk)">';
+  h += '<div style="display:flex;gap:8px;margin-bottom:10px">';
+  h += '<div style="flex:1"><div style="font-size:12px;color:var(--sub);margin-bottom:5px">เวลาเริ่ม</div>';
+  h += '<input id="add-ev-start" type="time" value="09:00" style="width:100%;padding:10px;border:.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--blk)"></div>';
+  h += '<div style="flex:1"><div style="font-size:12px;color:var(--sub);margin-bottom:5px">เวลาสิ้นสุด</div>';
+  h += '<input id="add-ev-end" type="time" value="10:00" style="width:100%;padding:10px;border:.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--blk)"></div>';
+  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">🔔 แจ้งเตือนล่วงหน้า</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  var remOpts = [
+    {label:'10 นาที', val:'10'},
+    {label:'30 นาที', val:'30'},
+    {label:'1 ชม.', val:'60'},
+    {label:'2 ชม.', val:'120'},
+    {label:'1 วัน', val:'1440'}
+  ];
+  remOpts.forEach(function(o,i){
+    var sel = i===1; // default 30 นาที
+    h += '<div onclick="selectReminder(this,\''+o.val+'\')" data-rem="'+o.val+'" style="padding:7px 13px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;';
+    h += sel ? 'background:var(--red);color:#fff;' : 'background:#f2f2f2;color:#555;';
+    h += '">'+o.label+'</div>';
+  });
+  h += '</div>';
+  h += '<input type="hidden" id="add-ev-reminder" value="30">';
+  h += '<input type="hidden" id="add-ev-date" value="'+date+'">';
+  h += '<button onclick="submitAddEvent()" style="width:100%;padding:13px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">+ เพิ่มนัดหมาย</button>';
+  h += '</div>';
   h += '</div></div>';
   document.getElementById('popup').innerHTML = h;
   setTimeout(function(){ var el=document.getElementById('add-task-name'); if(el) el.focus(); }, 100);
-  // default select Medium
   var medEl = document.querySelector('[data-pri="Medium"]');
   if (medEl) { medEl.style.borderColor='#BA7517'; medEl.style.outline='2px solid #BA7517'; }
+}
+function switchAddTab(tab) {
+  var isTask = tab === 'task';
+  document.getElementById('form-task').style.display = isTask ? '' : 'none';
+  document.getElementById('form-event').style.display = isTask ? 'none' : '';
+  document.getElementById('tab-task-btn').style.background = isTask ? 'var(--red)' : 'transparent';
+  document.getElementById('tab-task-btn').style.color = isTask ? '#fff' : '#888';
+  document.getElementById('tab-event-btn').style.background = isTask ? 'transparent' : '#185FA5';
+  document.getElementById('tab-event-btn').style.color = isTask ? '#888' : '#fff';
+  if (!isTask) { setTimeout(function(){ var el=document.getElementById('add-ev-name'); if(el) el.focus(); }, 100); }
+}
+function selectReminder(el, val) {
+  document.querySelectorAll('[data-rem]').forEach(function(e){
+    e.style.background = '#f2f2f2'; e.style.color = '#555';
+  });
+  el.style.background = 'var(--red)'; el.style.color = '#fff';
+  document.getElementById('add-ev-reminder').value = val;
+}
+function submitAddEvent() {
+  var name = (document.getElementById('add-ev-name')||{}).value || '';
+  var start = (document.getElementById('add-ev-start')||{}).value || '09:00';
+  var end = (document.getElementById('add-ev-end')||{}).value || '10:00';
+  var reminder = (document.getElementById('add-ev-reminder')||{}).value || '30';
+  var date = (document.getElementById('add-ev-date')||{}).value || TODAY_STR;
+  if (!name.trim()) { showToast('กรุณาใส่ชื่อนัดหมาย'); return; }
+  showToast('⏳ กำลังเพิ่มนัดหมาย...');
+  closePopup();
+  apiCall({ action:'addCalendarEvent', name:encodeURIComponent(name.trim()), date:date, startTime:start, endTime:end, reminder:reminder }, function(data) {
+    if (data && data.ok) {
+      showToast('📅 เพิ่มนัดหมายแล้ว: '+name.trim());
+      delete calEventCache[date];
+      if (currentTab==='cal') renderCal();
+    } else {
+      showToast('❌ เพิ่มไม่ได้ ลองใหม่');
+    }
+  });
 }
 function selectAddPriority(el, pri) {
   document.querySelectorAll('[data-pri]').forEach(function(e){
@@ -965,15 +1037,24 @@ function renderTasksTab() {
     noDateTasks = data.tasks || [];
     document.getElementById('hdr-sub').textContent = noDateTasks.length + ' งาน · ยังไม่ได้ลงวัน';
     var h = '';
+    if (noDateTasks.length > 0) {
+      h += '<div style="font-size:11px;color:var(--sub);text-align:center;padding:6px 0 2px;letter-spacing:.3px">← swipe ซ้ายเพื่อลบ</div>';
+    }
     ['High','Medium','Low'].forEach(function(pri) {
       var list = noDateTasks.filter(function(t){ return t.priority===pri; });
       if (list.length > 0) {
         h += '<div class="sec">'+(pri==='High'?'🔴':pri==='Medium'?'🟡':'🟢')+' '+pri+'</div>';
         list.forEach(function(t) {
-          h += '<div class="nd-card" id="nd-'+t.id+'">';
+          var safeName = t.name.replace(/'/g,'').replace(/"/g,'');
+          h += '<div style="position:relative;margin-bottom:6px;border-radius:12px;overflow:hidden" id="swipe-wrap-'+t.id+'">';
+          h += '<div style="position:absolute;right:0;top:0;bottom:0;width:72px;background:#FF3B30;display:flex;align-items:center;justify-content:center;border-radius:0 12px 12px 0">';
+          h += '<div style="text-align:center"><i class="ti ti-trash" style="font-size:18px;color:#fff"></i><div style="font-size:10px;color:#fff;margin-top:2px">ลบ</div></div>';
+          h += '</div>';
+          h += '<div class="nd-card" id="nd-'+t.id+'" style="position:relative;z-index:1;transition:transform .25s ease;margin-bottom:0;border-radius:12px;touch-action:pan-y" data-swipe-id="'+t.id+'" data-swipe-name="'+safeName+'">';
           h += '<div class="chk '+(pc(t.priority))+'"></div>';
           h += '<div style="flex:1;min-width:0"><div class="tn">'+t.name+'</div><span class="pb '+(pc(t.priority))+'">'+t.priority+'</span></div>';
-          h += '<button class="add-btn" data-addid="'+t.id+'" data-addname="'+t.name+'">+ วัน</button>';
+          h += '<button class="add-btn" data-addid="'+t.id+'" data-addname="'+safeName+'">+ วัน</button>';
+          h += '</div>';
           h += '</div>';
         });
       }
@@ -981,11 +1062,78 @@ function renderTasksTab() {
     if (noDateTasks.length===0) h = '<div class="empty">🎉 งานทั้งหมดมีวันกำหนดแล้ว</div>';
     var cnt = document.getElementById('cnt');
     cnt.innerHTML = h;
+    setTimeout(initSwipeDelete, 100);
     cnt.onclick = function(e) {
       var ab = e.target.closest('[data-addid]');
       if (ab) openAddDatePopup(ab.getAttribute('data-addid'), ab.getAttribute('data-addname'));
     };
   });
+}
+
+// ===================== SWIPE TO DELETE =====================
+function initSwipeDelete() {
+  var cards = document.querySelectorAll('[data-swipe-id]');
+  cards.forEach(function(card) {
+    var startX = 0, currentX = 0, isDragging = false;
+    var id = card.getAttribute('data-swipe-id');
+    var name = card.getAttribute('data-swipe-name');
+
+    card.addEventListener('touchstart', function(e) {
+      startX = e.touches[0].clientX;
+      isDragging = true;
+    }, { passive: true });
+
+    card.addEventListener('touchmove', function(e) {
+      if (!isDragging) return;
+      currentX = e.touches[0].clientX - startX;
+      if (currentX > 0) currentX = 0;
+      if (currentX < -72) currentX = -72;
+      card.style.transform = 'translateX('+currentX+'px)';
+    }, { passive: true });
+
+    card.addEventListener('touchend', function() {
+      isDragging = false;
+      if (currentX < -40) {
+        card.style.transform = 'translateX(-72px)';
+        confirmDeleteTask(id, name);
+      } else {
+        card.style.transform = 'translateX(0)';
+      }
+      currentX = 0;
+    });
+  });
+}
+
+function confirmDeleteTask(id, name) {
+  var h = '<div class="popup-overlay" onclick="if(event.target===this){closePopup();resetSwipe(\''+id+'\')}">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>ลบงาน</span><span class="pop-close" onclick="closePopup();resetSwipe(\''+id+'\')">×</span></div>';
+  h += '<div style="font-size:14px;color:var(--blk);margin-bottom:16px">ต้องการลบ <b>"'+name+'"</b> ใช่ไหม?</div>';
+  h += '<div style="display:flex;gap:8px">';
+  h += '<button onclick="closePopup();resetSwipe(\''+id+'\')" style="flex:1;padding:13px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:10px;font-size:14px;cursor:pointer">ยกเลิก</button>';
+  h += '<button onclick="doDeleteTask(\''+id+'\')" style="flex:1;padding:13px;background:#FF3B30;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">🗑️ ลบเลย</button>';
+  h += '</div></div></div>';
+  document.getElementById('popup').innerHTML = h;
+}
+
+function resetSwipe(id) {
+  var card = document.querySelector('[data-swipe-id="'+id+'"]');
+  if (card) card.style.transform = 'translateX(0)';
+}
+
+function doDeleteTask(id) {
+  closePopup();
+  var wrap = document.getElementById('swipe-wrap-'+id);
+  if (wrap) {
+    wrap.style.opacity = '0';
+    wrap.style.transition = 'opacity .2s,height .3s';
+    setTimeout(function(){ wrap.style.height = '0'; wrap.style.marginBottom = '0'; }, 200);
+    setTimeout(function(){ wrap.remove(); }, 500);
+  }
+  noDateTasks = noDateTasks.filter(function(t){ return t.id !== id; });
+  document.getElementById('hdr-sub').textContent = noDateTasks.length + ' งาน · ยังไม่ได้ลงวัน';
+  showToast('🗑️ ลบแล้ว');
+  apiSilent({ action:'deleteTask', id:id });
 }
 function openAddDatePopup(id, name) {
   popupTaskId = id; popupSelectedDate = TODAY_STR;
