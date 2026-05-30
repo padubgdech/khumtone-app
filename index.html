@@ -541,10 +541,16 @@ function renderAllContent() {
   var cnt = document.getElementById('cnt');
   cnt.innerHTML = h;
   cnt.onclick = function(e) {
-    var tc = e.target.closest('[data-tid]');
-    if (tc) { toggleTask(tc.getAttribute('data-tid')); return; }
-    var mv = e.target.closest('[data-move]');
-    if (mv) { e.stopPropagation(); openMovePopup(mv.getAttribute('data-move'), mv.getAttribute('data-name')); return; }
+    var delBtn = e.target.closest('[data-delid]');
+    if (delBtn) { e.stopPropagation(); confirmDeleteTask(delBtn.getAttribute('data-delid'), delBtn.getAttribute('data-delname')); return; }
+    var mvBtn = e.target.closest('[data-moveid]');
+    if (mvBtn) { e.stopPropagation(); openMovePopup(mvBtn.getAttribute('data-moveid'), mvBtn.getAttribute('data-movename')); return; }
+    var doneBtn = e.target.closest('[data-doneid]');
+    if (doneBtn) { e.stopPropagation(); confirmTask(doneBtn.getAttribute('data-doneid')); return; }
+    var undoBtn = e.target.closest('[data-undoid]');
+    if (undoBtn) { e.stopPropagation(); cancelTask(undoBtn.getAttribute('data-undoid')); return; }
+    var editBtn = e.target.closest('[data-editid]');
+    if (editBtn) { e.stopPropagation(); openEditTaskPopup(editBtn.getAttribute('data-editid'), editBtn.getAttribute('data-editname'), editBtn.getAttribute('data-editpri')); return; }
     var rc = e.target.closest('[data-rid]');
     if (rc) { toggleRoutine(rc.getAttribute('data-rid')); return; }
   };
@@ -553,26 +559,26 @@ function renderAllContent() {
 function taskCard(t, showMove) {
   var pc2 = pc(t.priority);
   var priColor = t.priority==='High' ? '#FF3B30' : t.priority==='Medium' ? '#FF9500' : '#34C759';
-  var bLeft = t.priority==='High' ? 'border-left:3px solid var(--red);' : t.priority==='Medium' ? 'border-left:3px solid #BA7517;' : 'border-left:3px solid #3B6D11;';
+  var bLeft = t.priority==='High' ? 'border-left:3px solid #FF3B30;' : t.priority==='Medium' ? 'border-left:3px solid #FF9500;' : 'border-left:3px solid #34C759;';
   var safeName = t.name.replace(/'/g,'').replace(/"/g,'');
   var h = '<div class="tc" style="'+bLeft+'flex-direction:column;align-items:stretch">';
   h += '<div style="display:flex;align-items:center;gap:10px">';
-  // จุดสีแทน circle
-  h += '<div style="width:10px;height:10px;border-radius:50%;background:'+priColor+';flex-shrink:0"></div>';
+  h += '<div style="width:8px;height:8px;border-radius:50%;background:'+priColor+';flex-shrink:0;margin-top:2px"></div>';
   h += '<div style="flex:1;min-width:0">';
   h += '<div class="tn'+(t.done?' done':'')+'">'+t.name+'</div>';
   h += '<span class="pb '+pc2+'">'+t.priority+'</span>';
   h += '</div>';
   if (!t.done) {
     h += '<div style="display:flex;gap:5px;flex-shrink:0">';
-    h += '<button onclick="confirmTask(\''+t.id+'\')" style="padding:6px 12px;font-size:12px;font-weight:500;background:var(--red);color:#fff;border:none;border-radius:7px;cursor:pointer">Done</button>';
-    if (showMove) h += '<button onclick="openMovePopup(\''+t.id+'\',\''+safeName+'\');event.stopPropagation()" style="padding:6px 9px;font-size:12px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer"><i class="ti ti-calendar-event" style="font-size:13px"></i></button>';
-    h += '<button onclick="confirmDeleteTask(\''+t.id+'\',\''+safeName+'\');event.stopPropagation()" style="padding:6px 9px;font-size:12px;background:#FFF0F0;color:#FF3B30;border:.5px solid #FFCDD2;border-radius:7px;cursor:pointer"><i class="ti ti-trash" style="font-size:13px"></i></button>';
+    h += '<button data-doneid="'+t.id+'" style="padding:6px 12px;font-size:12px;font-weight:500;background:var(--red);color:#fff;border:none;border-radius:7px;cursor:pointer">✓ Done</button>';
+    h += '<button data-editid="'+t.id+'" data-editname="'+safeName+'" data-editpri="'+t.priority+'" style="padding:6px 10px;font-size:12px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">แก้ไข</button>';
+    if (showMove) h += '<button data-moveid="'+t.id+'" data-movename="'+safeName+'" style="padding:6px 10px;font-size:12px;background:var(--card);color:var(--sub);border:.5px solid var(--border);border-radius:7px;cursor:pointer">เลื่อน</button>';
+    h += '<button data-delid="'+t.id+'" data-delname="'+safeName+'" style="padding:6px 10px;font-size:12px;background:#FFF0F0;color:#FF3B30;border:.5px solid #FFCDD2;border-radius:7px;cursor:pointer">ลบ</button>';
     h += '</div>';
   } else {
     h += '<div style="display:flex;align-items:center;gap:6px;flex-shrink:0">';
-    h += '<span style="font-size:12px;color:#34C759;display:flex;align-items:center;gap:3px"><i class="ti ti-check" style="font-size:13px"></i> Done</span>';
-    h += '<button onclick="cancelTask(\''+t.id+'\')" style="padding:4px 10px;font-size:11px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:6px;cursor:pointer">Undo</button>';
+    h += '<span style="font-size:12px;color:#34C759">✓ Done</span>';
+    h += '<button data-undoid="'+t.id+'" style="padding:4px 10px;font-size:11px;background:var(--bg);color:var(--sub);border:.5px solid var(--border);border-radius:6px;cursor:pointer">Undo</button>';
     h += '</div>';
   }
   h += '</div>';
@@ -981,13 +987,69 @@ function renderExpandPanel(date) {
     });
   }
   if (!tasks.length && !events.length) h += '<div style="font-size:13px;color:var(--sub);text-align:center;padding:12px 0">ไม่มีงานและนัดหมาย</div>';
-  h += '<button onclick="openAddTaskPopup(\''+date+'\')" style="width:100%;margin-top:10px;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">+ Add Task</button>';
+  h += '<div style="display:flex;gap:8px;margin-top:10px">';
+  h += '<button onclick="openAddTaskPopup(\''+date+'\')" style="flex:1;padding:10px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">+ Task</button>';
+  h += '<button onclick="openAddEventPopupCal(\''+date+'\')" style="flex:1;padding:10px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer">+ นัดหมาย</button>';
+  h += '</div>';
   return h;
 }
 
 function selectCalDay(date) { toggleCalDay(date); }
 function renderCalDetail(date) { toggleCalDay(date); }
 function renderCalDayDetail() { return ''; }
+
+function openAddEventPopupCal(date) {
+  var thDays = ['อาทิตย์','จันทร์','อังคาร','พุธ','พฤหัส','ศุกร์','เสาร์'];
+  var thM = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
+  var d = new Date(date+'T00:00:00+07:00');
+  var label = 'วัน'+thDays[d.getDay()]+' '+d.getDate()+' '+thM[d.getMonth()];
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>📅 เพิ่มนัดหมาย</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:12px">'+label+'</div>';
+  h += '<input id="add-ev-name-cal" type="text" placeholder="ชื่อนัดหมาย..." style="width:100%;padding:12px;border:.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card);color:var(--blk)">';
+  h += '<div style="display:flex;gap:8px;margin-bottom:10px">';
+  h += '<div style="flex:1"><div style="font-size:12px;color:var(--sub);margin-bottom:5px">เวลาเริ่ม</div>';
+  h += '<input id="add-ev-start-cal" type="time" value="09:00" style="width:100%;padding:10px;border:.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--blk)"></div>';
+  h += '<div style="flex:1"><div style="font-size:12px;color:var(--sub);margin-bottom:5px">เวลาสิ้นสุด</div>';
+  h += '<input id="add-ev-end-cal" type="time" value="10:00" style="width:100%;padding:10px;border:.5px solid var(--border);border-radius:10px;font-size:14px;background:var(--card);color:var(--blk)"></div>';
+  h += '</div>';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">🔔 แจ้งเตือนล่วงหน้า</div>';
+  h += '<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px">';
+  [['10 นาที','10'],['30 นาที','30'],['1 ชม.','60'],['2 ชม.','120'],['1 วัน','1440']].forEach(function(o,i){
+    var sel = i===1;
+    h += '<div onclick="selectCalEvRem(this,\''+o[1]+'\')" data-rem="'+o[1]+'" style="padding:7px 13px;border-radius:8px;font-size:12px;font-weight:500;cursor:pointer;';
+    h += sel ? 'background:var(--red);color:#fff;' : 'background:#f2f2f2;color:#555;';
+    h += '">'+o[0]+'</div>';
+  });
+  h += '</div>';
+  h += '<input type="hidden" id="add-ev-rem-cal" value="30">';
+  h += '<input type="hidden" id="add-ev-date-cal" value="'+date+'">';
+  h += '<button onclick="submitAddEventCal()" style="width:100%;padding:13px;background:#185FA5;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">+ เพิ่มนัดหมาย</button>';
+  h += '</div></div>';
+  document.getElementById('popup').innerHTML = h;
+  setTimeout(function(){ var el=document.getElementById('add-ev-name-cal'); if(el) el.focus(); }, 100);
+}
+function selectCalEvRem(el, val) {
+  document.querySelectorAll('[data-rem]').forEach(function(e){ e.style.background='#f2f2f2'; e.style.color='#555'; });
+  el.style.background='var(--red)'; el.style.color='#fff';
+  document.getElementById('add-ev-rem-cal').value = val;
+}
+function submitAddEventCal() {
+  var name = (document.getElementById('add-ev-name-cal')||{}).value || '';
+  var start = (document.getElementById('add-ev-start-cal')||{}).value || '09:00';
+  var end = (document.getElementById('add-ev-end-cal')||{}).value || '10:00';
+  var rem = (document.getElementById('add-ev-rem-cal')||{}).value || '30';
+  var date = (document.getElementById('add-ev-date-cal')||{}).value || TODAY_STR;
+  if (!name.trim()) { showToast('กรุณาใส่ชื่อนัดหมาย'); return; }
+  showToast('⏳ กำลังเพิ่มนัดหมาย...');
+  closePopup();
+  apiCall({ action:'addCalendarEvent', name:encodeURIComponent(name.trim()), date:date, startTime:start, endTime:end, reminder:rem }, function(data) {
+    showToast('📅 เพิ่มนัดหมายแล้ว: '+name.trim());
+    delete calEventCache[date];
+    if (currentTab==='cal') renderCal();
+  });
+}
 
 // ===================== TAB ROUTINE (ประวัติงานเสร็จ) =====================
 function renderRoutine() {
@@ -1080,7 +1142,8 @@ function renderTasksTab() {
           h += '<div style="flex:1;min-width:0"><div class="tn" style="font-size:14px">'+t.name+'</div></div>';
           h += '<div style="display:flex;gap:6px;flex-shrink:0">';
           h += '<button class="add-btn" data-addid="'+t.id+'" data-addname="'+safeName+'">+ วัน</button>';
-          h += '<button onclick="confirmDeleteTask(\''+t.id+'\',\''+safeName+'\')" style="padding:7px 9px;border-radius:8px;background:#FFF0F0;border:.5px solid #FFCDD2;color:#FF3B30;font-size:13px;cursor:pointer"><i class="ti ti-trash" style="font-size:13px"></i></button>';
+          h += '<button data-editid="'+t.id+'" data-editname="'+safeName+'" data-editpri="'+t.priority+'" style="padding:7px 9px;border-radius:8px;background:var(--card);border:.5px solid var(--border);color:var(--sub);font-size:13px;cursor:pointer"><i class="ti ti-edit" style="font-size:13px"></i></button>';
+          h += '<button data-delid="'+t.id+'" data-delname="'+safeName+'" style="padding:7px 9px;border-radius:8px;background:#FFF0F0;border:.5px solid #FFCDD2;color:#FF3B30;font-size:13px;cursor:pointer"><i class="ti ti-trash" style="font-size:13px"></i></button>';
           h += '</div>';
           h += '</div>';
         });
@@ -1091,7 +1154,11 @@ function renderTasksTab() {
     cnt.innerHTML = h;
     cnt.onclick = function(e) {
       var ab = e.target.closest('[data-addid]');
-      if (ab) openAddDatePopup(ab.getAttribute('data-addid'), ab.getAttribute('data-addname'));
+      if (ab) { openAddDatePopup(ab.getAttribute('data-addid'), ab.getAttribute('data-addname')); return; }
+      var delBtn = e.target.closest('[data-delid]');
+      if (delBtn) { confirmDeleteTask(delBtn.getAttribute('data-delid'), delBtn.getAttribute('data-delname')); return; }
+      var editBtn = e.target.closest('[data-editid]');
+      if (editBtn) { openEditTaskPopup(editBtn.getAttribute('data-editid'), editBtn.getAttribute('data-editname'), editBtn.getAttribute('data-editpri')); return; }
     };
   });
 }
@@ -1140,6 +1207,49 @@ function confirmDeleteTask(id, name) {
   h += '<button onclick="doDeleteTask(\''+id+'\')" style="flex:1;padding:13px;background:#FF3B30;color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">🗑️ ลบเลย</button>';
   h += '</div></div></div>';
   document.getElementById('popup').innerHTML = h;
+}
+
+function openEditTaskPopup(id, name, priority) {
+  var h = '<div class="popup-overlay" onclick="if(event.target===this)closePopup()">';
+  h += '<div class="popup-sheet">';
+  h += '<div class="pop-title"><span>✏️ แก้ไขงาน</span><span class="pop-close" onclick="closePopup()">×</span></div>';
+  h += '<input id="edit-task-name" type="text" value="'+name+'" style="width:100%;padding:12px;border:.5px solid var(--border);border-radius:10px;font-size:14px;margin-bottom:10px;background:var(--card);color:var(--blk)">';
+  h += '<div style="font-size:12px;color:var(--sub);margin-bottom:6px">Priority</div>';
+  h += '<div style="display:flex;gap:8px;margin-bottom:14px">';
+  ['High','Medium','Low'].forEach(function(pri) {
+    var emoji = pri==='High'?'🔴':pri==='Medium'?'🟡':'🟢';
+    var bg = pri==='High'?'#FCEBEB':pri==='Medium'?'#FAEEDA':'#EAF3DE';
+    var col = pri==='High'?'#791F1F':pri==='Medium'?'#633806':'#27500A';
+    var sel = priority===pri ? 'outline:2px solid '+(pri==='High'?'#A32D2D':pri==='Medium'?'#BA7517':'#3B6D11')+';' : '';
+    h += '<div onclick="selectEditPriority(this,\''+pri+'\')" data-epri="'+pri+'" style="flex:1;padding:8px;border-radius:8px;border:1.5px solid '+bg+';background:'+bg+';color:'+col+';font-size:12px;font-weight:500;text-align:center;cursor:pointer;'+sel+'">'+emoji+' '+pri+'</div>';
+  });
+  h += '</div>';
+  h += '<input type="hidden" id="edit-task-priority" value="'+priority+'">';
+  h += '<input type="hidden" id="edit-task-id" value="'+id+'">';
+  h += '<button onclick="submitEditTask()" style="width:100%;padding:13px;background:var(--red);color:#fff;border:none;border-radius:10px;font-size:14px;font-weight:500;cursor:pointer">บันทึก</button>';
+  h += '</div></div>';
+  document.getElementById('popup').innerHTML = h;
+  setTimeout(function(){ var el=document.getElementById('edit-task-name'); if(el){el.focus();el.select();} }, 100);
+}
+function selectEditPriority(el, pri) {
+  document.querySelectorAll('[data-epri]').forEach(function(e){ e.style.outline='none'; });
+  el.style.outline='2px solid '+(pri==='High'?'#A32D2D':pri==='Medium'?'#BA7517':'#3B6D11');
+  document.getElementById('edit-task-priority').value = pri;
+}
+function submitEditTask() {
+  var id = document.getElementById('edit-task-id').value;
+  var name = document.getElementById('edit-task-name').value.trim();
+  var pri = document.getElementById('edit-task-priority').value;
+  if (!name) { showToast('กรุณาใส่ชื่องาน'); return; }
+  // อัพเดทใน local state
+  [todayTasks].concat(Object.values(weekTasks)).concat([noDateTasks]).forEach(function(arr){
+    arr.forEach(function(t){ if(t.id===id){ t.name=name; t.priority=pri; } });
+  });
+  showToast('✅ แก้ไขแล้ว');
+  closePopup();
+  apiSilent({ action:'editTask', id:id, name:encodeURIComponent(name), priority:pri });
+  if (currentTab==='all') renderAllContent();
+  if (currentTab==='tasks') renderTasksTab();
 }
 
 function resetSwipe(id) {
